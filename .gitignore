@@ -1,3 +1,4 @@
 # config
 *.env
-/gin-mongo-api/
+gin-mongo-api/.env
+gin-mongo-api/.env
