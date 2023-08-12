@@ -3,14 +3,16 @@ package controllers
 import (
     // "context"
     // "gin-mongo-api/configs"
-    // "gin-mongo-api/models"
+    "gin-mongo-api/models"
     // "gin-mongo-api/responses"
     // "gin-mongo-api/middleware"
-    // "fmt"
+    "fmt"
 	"net/http"
 	"io"
     "encoding/json"
     "os"
+    "strings"
+    // "compress/gzip"
     // "time"
 
     "github.com/gin-gonic/gin"
@@ -24,11 +26,14 @@ import (
 func getTMDB(params string) (map[string]interface{}, error) {
     var jsonResponse map[string]interface{}
 
-    req, err := http.NewRequest(http.MethodGet, "https://api.themoviedb.org/3/" + params, nil)
+    url := "https://api.themoviedb.org/3/" + params
+    // fmt.Println(url
+    req, err := http.NewRequest("GET", url, nil)
     if err != nil {
         return jsonResponse, err
     }
 
+    // req.Header.Add("Accept-Encoding", "gzip, deflate, br")
     req.Header.Add("accept", "application/json")
 	req.Header.Add("Authorization", "Bearer " + os.Getenv("TMDB"))
 
@@ -38,11 +43,20 @@ func getTMDB(params string) (map[string]interface{}, error) {
         return jsonResponse, err
     }
 
+
+    // reader, err := gzip.NewReader(res.Body)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// defer reader.Close()
+
     defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
     if err != nil {
         return jsonResponse, err
     }
+
+    // fmt.Println(string(body))
 
     err = json.Unmarshal(body, &jsonResponse)
     if err != nil {
@@ -63,7 +77,6 @@ func TMDBTest() gin.HandlerFunc {
             return
         }
 
-
         c.JSON(http.StatusOK, json)
     }
 }
@@ -74,7 +87,53 @@ func TMDBSearch() gin.HandlerFunc {
         // ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
         // defer cancel()
 
-        c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
+        query := strings.Replace(c.Query("q"), " ", "%20", -1)
+        json, err := getTMDB("search/multi?query=" + query + "&include_adult=false&language=en-US&page=1")
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+            return
+        }
+
+        var result map[string]interface{}
+
+        length := 20
+        if int(json["total_results"].(float64)) < 20 {
+            length = int(json["total_results"].(float64))
+        }
+
+        for i := 0; i < length; i++ {
+            result = json["results"].([]interface{})[i].(map[string]interface{})
+            // fmt.Println(results[i])
+
+            if result["media_type"] == "tv" {
+                fmt.Println("tv")
+
+            } else if result["media_type"] == "movie" {
+                fmt.Println("movie")
+
+                movie := models.Movie{
+                    Title: result["title"].(string),
+                    Description: result["overview"].(string),
+                    Date: result["release_date"].(string),
+                    Popularity: result["popularity"].(float64),
+                    VoteCount: int(result["vote_count"].(float64)),
+                    VoteRating: result["vote_average"].(float64),
+                    Image: result["poster_path"].(string),
+                    TMDB: int(result["id"].(float64)),
+                }
+
+                err := movie.Save()
+                if err != nil {
+                    c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+                    return
+                }
+
+            } else {
+                fmt.Println("else")
+            }
+        }
+
+        c.JSON(http.StatusCreated, json)
     }
 }
 
