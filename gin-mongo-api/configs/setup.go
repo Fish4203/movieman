@@ -5,12 +5,20 @@ import (
     "fmt"
     "log"
     "time"
+    "os"
+    "github.com/joho/godotenv"
+    // "go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/mongo"
     "go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func ConnectDB() *mongo.Client  {
-    client, err := mongo.NewClient(options.Client().ApplyURI(EnvMongoURI()))
+func InitClient() *mongo.Client  {
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatal("Error loading .env file")
+    }
+
+    client, err := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGOURI")))
     if err != nil {
         log.Fatal(err)
     }
@@ -29,12 +37,12 @@ func ConnectDB() *mongo.Client  {
     fmt.Println("Connected to MongoDB")
     return client
 }
-
-//Client instance
-var DB *mongo.Client = ConnectDB()
-
 //getting database collections
 func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
+    fmt.Println(collectionName)
     collection := client.Database("movieman").Collection(collectionName)
     return collection
 }
+
+//Client instance
+var DB *mongo.Client = InitClient()

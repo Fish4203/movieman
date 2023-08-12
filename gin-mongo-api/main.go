@@ -10,11 +10,12 @@ import (
 func main() {
         router := gin.Default()
 
-        configs.ConnectDB()
+        configs.InitClient()
 
         router.Use(middleware.AuthMiddleware())
 
         routes.UserRoute(router)
+        routes.TMDBRoute(router)
 
         router.Run("localhost:3000")
 }

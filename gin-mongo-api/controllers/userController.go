@@ -2,7 +2,7 @@ package controllers
 
 import (
     "context"
-    "gin-mongo-api/configs"
+    // "gin-mongo-api/configs"
     "gin-mongo-api/models"
     // "gin-mongo-api/responses"
     "gin-mongo-api/middleware"
@@ -13,11 +13,11 @@ import (
     "github.com/go-playground/validator/v10"
     "go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/bson/primitive"
-    "go.mongodb.org/mongo-driver/mongo"
+    // "go.mongodb.org/mongo-driver/mongo"
     "golang.org/x/crypto/bcrypt"
 )
 
-var userCollection *mongo.Collection = configs.GetCollection(configs.DB, "users")
+
 var validate = validator.New()
 
 func CreateUser() gin.HandlerFunc {
@@ -51,7 +51,7 @@ func CreateUser() gin.HandlerFunc {
             Role:     user.Role,
         }
 
-        result, err := userCollection.InsertOne(ctx, newUser)
+        result, err := models.UserCollection.InsertOne(ctx, newUser)
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
@@ -72,7 +72,7 @@ func GetAUser() gin.HandlerFunc {
         defer cancel()
 
         objId, _ := primitive.ObjectIDFromHex(userId)
-        err := userCollection.FindOne(ctx, bson.M{"id": objId}).Decode(&user)
+        err := models.UserCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&user)
         if err != nil {
             c.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
             return
@@ -116,7 +116,7 @@ func EditAUser() gin.HandlerFunc {
         }
 
         update := bson.M{"name": user.Name, "password": string(hashedPassword), "role": user.Role}
-        result, err := userCollection.UpdateOne(ctx, bson.M{"id": objId}, bson.M{"$set": update})
+        result, err := models.UserCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
@@ -129,7 +129,7 @@ func EditAUser() gin.HandlerFunc {
             return
         }
 
-        err = userCollection.FindOne(ctx, bson.M{"id": objId}).Decode(&updatedUser)
+        err = models.UserCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&updatedUser)
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
@@ -154,7 +154,7 @@ func DeleteAUser() gin.HandlerFunc {
 
         objId, _ := primitive.ObjectIDFromHex(userId)
 
-        result, err := userCollection.DeleteOne(ctx, bson.M{"id": objId})
+        result, err := models.UserCollection.DeleteOne(ctx, bson.M{"_id": objId})
         if err != nil {
             c.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
             return
@@ -175,7 +175,7 @@ func GetAllUsers() gin.HandlerFunc {
         var users []models.User
         defer cancel()
 
-        results, err := userCollection.Find(ctx, bson.M{})
+        results, err := models.UserCollection.Find(ctx, bson.M{})
 
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -219,7 +219,7 @@ func Login() gin.HandlerFunc {
 
         password := user.Password
 
-        err := userCollection.FindOne(ctx, bson.M{"name": user.Name}).Decode(&user)
+        err := models.UserCollection.FindOne(ctx, bson.M{"name": user.Name}).Decode(&user)
         if err != nil {
             c.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
             return
