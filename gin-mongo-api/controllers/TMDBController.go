@@ -107,6 +107,23 @@ func TMDBSearch() gin.HandlerFunc {
 
             if result["media_type"] == "tv" {
                 fmt.Println("tv")
+                show := models.Show{
+                    Title: result["name"].(string),
+                    Description: result["overview"].(string),
+                    Date: result["first_air_date"].(string),
+                    Popularity: result["popularity"].(float64),
+                    VoteCount: int(result["vote_count"].(float64)),
+                    VoteRating: result["vote_average"].(float64),
+                    TMDB: int(result["id"].(float64)),
+                }
+                if result["poster_path"] != nil {
+                    show.Image = result["poster_path"].(string)
+                }
+
+                err := show.Save()
+                if err != nil {
+                    c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+                }
 
             } else if result["media_type"] == "movie" {
                 fmt.Println("movie")
@@ -118,14 +135,16 @@ func TMDBSearch() gin.HandlerFunc {
                     Popularity: result["popularity"].(float64),
                     VoteCount: int(result["vote_count"].(float64)),
                     VoteRating: result["vote_average"].(float64),
-                    Image: result["poster_path"].(string),
                     TMDB: int(result["id"].(float64)),
+                }
+
+                if result["poster_path"] != nil {
+                    movie.Image = result["poster_path"].(string)
                 }
 
                 err := movie.Save()
                 if err != nil {
                     c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-                    return
                 }
 
             } else {
@@ -133,7 +152,7 @@ func TMDBSearch() gin.HandlerFunc {
             }
         }
 
-        c.JSON(http.StatusCreated, json)
+        c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
     }
 }
 

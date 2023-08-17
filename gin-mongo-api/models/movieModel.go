@@ -1,16 +1,18 @@
 package models
 
 import (
+    "time"
     "context"
     "gin-mongo-api/configs"
-    "go.mongodb.org/mongo-driver/mongo"
     "github.com/go-playground/validator/v10"
-    "time"
+    "go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/mongo/options"
+    "go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var validate = validator.New()
-
+var updateOpts = options.Update().SetUpsert(true)
 
 type Movie struct {
     Id          primitive.ObjectID `json:"id,omitempty"           bson:"_id,omitempty"`
@@ -41,7 +43,31 @@ func (m *Movie) Save() error {
         return err
     }
 
-    _, err := MovieCollection.InsertOne(ctx, *m)
+    filter := bson.M{"title": m.Title, "date": m.Date}
+    _, err := MovieCollection.UpdateOne(ctx, filter, bson.D{{"$set", *m}}, updateOpts)
 
     return err
+}
+
+func FindMovie(filter bson.D) ([]Movie, error) {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    var movies []Movie
+    defer cancel()
+
+    results, err := MovieCollection.Find(ctx, filter)
+    if err != nil {
+        return movies, err
+    }
+
+    //reading from the db in an optimal way
+    defer results.Close(ctx)
+    for results.Next(ctx) {
+        var singleMovie Movie
+        if err = results.Decode(&singleMovie); err != nil {
+            return movies, err
+        }
+        movies = append(movies, singleMovie)
+    }
+
+    return movies, nil
 }

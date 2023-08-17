@@ -16,6 +16,7 @@ func main() {
 
         routes.UserRoute(router)
         routes.TMDBRoute(router)
+        routes.GetMediaRoute(router)
 
         router.Run("localhost:3000")
 }
