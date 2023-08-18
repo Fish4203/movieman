@@ -7,6 +7,7 @@ import (
     // "gin-mongo-api/responses"
     // "gin-mongo-api/middleware"
     "fmt"
+    "strconv"
 	"net/http"
 	"io"
     "encoding/json"
@@ -22,6 +23,11 @@ import (
     // "go.mongodb.org/mongo-driver/mongo"
     // "golang.org/x/crypto/bcrypt"
 )
+
+func init() {
+    fmt.Println("TMMB controler")
+
+}
 
 func getTMDB(params string) (map[string]interface{}, error) {
     var jsonResponse map[string]interface{}
@@ -106,7 +112,7 @@ func TMDBSearch() gin.HandlerFunc {
             // fmt.Println(results[i])
 
             if result["media_type"] == "tv" {
-                fmt.Println("tv")
+                // fmt.Println("tv")
                 show := models.Show{
                     Title: result["name"].(string),
                     Description: result["overview"].(string),
@@ -148,7 +154,29 @@ func TMDBSearch() gin.HandlerFunc {
                 }
 
             } else {
-                fmt.Println("else")
+                jsonPerson, err := getTMDB("person/" + strconv.Itoa(int(result["id"].(float64))) + "?language=en-US")
+                // fmt.Println(jsonPerson)
+
+                person := models.Person{
+                    Name: jsonPerson["name"].(string),
+                    Role: jsonPerson["known_for_department"].(string),
+                    Description: jsonPerson["biography"].(string),
+                    Popularity: jsonPerson["popularity"].(float64),
+                    TMDB: int(jsonPerson["id"].(float64)),
+                    IMDB: jsonPerson["imdb_id"].(string),
+                }
+
+                if jsonPerson["profile_path"] != nil {
+                    person.Image = jsonPerson["profile_path"].(string)
+                }
+                if jsonPerson["birthday"] != nil {
+                    person.Date = jsonPerson["birthday"].(string)
+                }
+
+                err = person.Save()
+                if err != nil {
+                    c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+                }
             }
         }
 

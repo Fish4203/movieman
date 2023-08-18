@@ -34,6 +34,11 @@ func GetMediaSearch() gin.HandlerFunc {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
         }
+        persons, err := models.FindPerson(bson.D{{"name", bson.D{{"$regex", query}, {"$options", "i"}}}})
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+            return
+        }
         shows, err := models.FindShow(bson.D{{"title", bson.D{{"$regex", query}, {"$options", "i"}}}})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -45,7 +50,7 @@ func GetMediaSearch() gin.HandlerFunc {
             return
         }
 
-        c.JSON(http.StatusOK, map[string]interface{}{"movies": movies, "shows": shows, "episodes": episodes})
+        c.JSON(http.StatusOK, map[string]interface{}{"movies": movies, "shows": shows, "episodes": episodes, "people": persons})
     }
 }
 

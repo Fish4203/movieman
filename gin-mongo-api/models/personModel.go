@@ -31,7 +31,8 @@ func (p *Person) Save() error {
         return err
     }
 
-    _, err := PersonCollection.UpdateOne(ctx, bson.M{"title": p.Name, "date": p.Date}, *p)
+    filter := bson.M{"name": p.Name, "date": p.Date}
+    _, err := PersonCollection.UpdateOne(ctx, filter, bson.D{{"$set", *p}}, updateOpts)
 
     return err
 }
@@ -42,7 +43,7 @@ func FindPerson(filter bson.D) ([]Person, error) {
     var persons []Person
     defer cancel()
 
-    results, err := MovieCollection.Find(ctx, filter)
+    results, err := PersonCollection.Find(ctx, filter)
     if err != nil {
         return persons, err
     }
