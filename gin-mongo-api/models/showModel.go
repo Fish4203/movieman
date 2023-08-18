@@ -100,3 +100,72 @@ func (s *ShowEpisode) Save() error {
 
     return err
 }
+
+func FindShow(filter bson.D) ([]Show, error) {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    var shows []Show
+    defer cancel()
+
+    results, err := ShowCollection.Find(ctx, filter)
+    if err != nil {
+        return shows, err
+    }
+
+    //reading from the db in an optimal way
+    defer results.Close(ctx)
+    for results.Next(ctx) {
+        var singleShow Show
+        if err = results.Decode(&singleShow); err != nil {
+            return shows, err
+        }
+        shows = append(shows, singleShow)
+    }
+
+    return shows, nil
+}
+
+func FindShowSeason(filter bson.D) ([]ShowSeason, error) {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    var shows []ShowSeason
+    defer cancel()
+
+    results, err := ShowSeasonCollection.Find(ctx, filter)
+    if err != nil {
+        return shows, err
+    }
+
+    //reading from the db in an optimal way
+    defer results.Close(ctx)
+    for results.Next(ctx) {
+        var singleShow ShowSeason
+        if err = results.Decode(&singleShow); err != nil {
+            return shows, err
+        }
+        shows = append(shows, singleShow)
+    }
+
+    return shows, nil
+}
+
+func FindShowEpisode(filter bson.D) ([]ShowEpisode, error) {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    var shows []ShowEpisode
+    defer cancel()
+
+    results, err := ShowEpisodeCollection.Find(ctx, filter)
+    if err != nil {
+        return shows, err
+    }
+
+    //reading from the db in an optimal way
+    defer results.Close(ctx)
+    for results.Next(ctx) {
+        var singleShow ShowEpisode
+        if err = results.Decode(&singleShow); err != nil {
+            return shows, err
+        }
+        shows = append(shows, singleShow)
+    }
+
+    return shows, nil
+}

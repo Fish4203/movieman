@@ -126,7 +126,7 @@ func TMDBSearch() gin.HandlerFunc {
                 }
 
             } else if result["media_type"] == "movie" {
-                fmt.Println("movie")
+                // fmt.Println("movie")
 
                 movie := models.Movie{
                     Title: result["title"].(string),
