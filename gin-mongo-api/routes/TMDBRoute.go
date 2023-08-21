@@ -13,4 +13,5 @@ func TMDBRoute(router *gin.Engine)  {
     router.GET("/TMDB/details/person/:personId", controllers.TMDBPersonDetails())
     // serch
     router.GET("/TMDB/search", controllers.TMDBSearch())
+    router.GET("/TMDB/popluar", controllers.TMDBPopular())
 }

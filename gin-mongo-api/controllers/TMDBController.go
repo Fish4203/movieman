@@ -181,8 +181,6 @@ func getTMDB(params string) (map[string]interface{}, error) {
         return jsonResponse, err
     }
 
-    // fmt.Println(string(body))
-
     err = json.Unmarshal(body, &jsonResponse)
     if err != nil {
         return jsonResponse, err
@@ -211,6 +209,46 @@ func TMDBSearch() gin.HandlerFunc {
         var err error
         query := strings.Replace(c.Query("q"), " ", "%20", -1)
         json, err := getTMDB("search/multi?query=" + query + "&include_adult=false&language=en-US&page=1")
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+            return
+        }
+
+        var result map[string]interface{}
+
+        length := 20
+        if int(json["total_results"].(float64)) < 20 {
+            length = int(json["total_results"].(float64))
+        }
+
+        for i := 0; i < length; i++ {
+            result = json["results"].([]interface{})[i].(map[string]interface{})
+
+            if result["media_type"] == "tv" {
+                show := showDecoderTMDB(result)
+                err = show.Save()
+            } else if result["media_type"] == "movie" {
+                movie := movieDecoderTMDB(result)
+                err = movie.Save()
+            } else {
+                var jsonPerson map[string]interface{}
+                jsonPerson, err = getTMDB("person/" + strconv.Itoa(int(result["id"].(float64))) + "?language=en-US")
+                person := personDecoderTMDB(jsonPerson)
+                err = person.Save()
+            }
+            if err != nil {
+                c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+            }
+        }
+
+        c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
+    }
+}
+
+func TMDBPopular() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        var err error
+        json, err := getTMDB("trending/all/week?language=en-US")
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
