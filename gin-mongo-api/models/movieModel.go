@@ -15,21 +15,28 @@ var validate = validator.New()
 var updateOpts = options.Update().SetUpsert(true)
 
 type Movie struct {
-    Id          primitive.ObjectID `json:"id,omitempty"           bson:"_id,omitempty"`
-    Title       string             `json:"title,omitempty"        validate:"required"`
-    Description string             `json:"description,omitempty"  validate:"required"`
-    Date        string             `json:"date,omitempty"         validate:"required"`
-    Genre       []string           `json:"genre,omitempty"        bson:"genre,omitempty"`
-    Info        string             `json:"info,omitempty"         bson:"info,omitempty"`
-    Budget      int                `json:"budget,omitempty"       bson:"budget,omitempty"`
-    Popularity  float64            `json:"popularity,omitempty"   bson:"popularity,omitempty"`
-    VoteCount   int                `json:"voteCount,omitempty"    bson:"voteCount, omitempty"`
-    VoteRating  float64            `json:"voteRating,omitempty"   bson:"voteRating,omitempty"`
-    Rating      string             `json:"rating,omitempty"       bson:"rating,omitempty"`
-    Length      uint               `json:"length,omitempty"       bson:"length,omitempty"`
-    Image       string             `json:"image,omitempty"        bson:"image,omitempty"`
-    TMDB        int                `json:"TMDB,omitempty"         bson:"TMDB,omitempty"`
-    IMDB        string             `json:"IMDB,omitempty"         bson:"IMDB,omitempty"`
+    Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"`
+    // basic info
+    Title       string                  `json:"title,omitempty"        validate:"required"`
+    Description string                  `json:"description,omitempty"  validate:"required"`
+    Date        string                  `json:"date,omitempty"         validate:"required"`
+    Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"`
+    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"`
+    Budget      int                     `json:"budget,omitempty"       bson:"budget,omitempty"`
+    Length      int                     `json:"length,omitempty"       bson:"length,omitempty"`
+    Rating      string                  `json:"rating,omitempty"       bson:"rating,omitempty"`
+    // pupularity
+    Popularity  float64                 `json:"popularity,omitempty"   bson:"popularity,omitempty"`
+    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount, omitempty"`
+    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"`
+    // related media
+    Image       string                  `json:"image,omitempty"        bson:"image,omitempty"`
+    // ids
+    TMDB        int                     `json:"TMDB,omitempty"         bson:"TMDB,omitempty"`
+    IMDB        string                  `json:"IMDB,omitempty"         bson:"IMDB,omitempty"`
+    // adjacent media
+    AdjShows    []primitive.ObjectID    `json:"adjShows,omitempty"     bson:"adjShows,omitempty"`
+    AdjMovies   []primitive.ObjectID    `json:"adjMovies,omitempty"    bson:"adjMovies,omitempty"`
 }
 
 var MovieCollection *mongo.Collection = configs.GetCollection(configs.DB, "movie")
@@ -45,6 +52,8 @@ func (m *Movie) Save() error {
 
     filter := bson.M{"title": m.Title, "date": m.Date}
     _, err := MovieCollection.UpdateOne(ctx, filter, bson.D{{"$set", *m}}, updateOpts)
+
+    err = MovieCollection.FindOne(ctx, filter).Decode(m)
 
     return err
 }

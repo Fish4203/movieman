@@ -9,46 +9,50 @@ import (
     "go.mongodb.org/mongo-driver/bson/primitive"
 )
 type Show struct {
-    Id          primitive.ObjectID `json:"id,omitempty"           bson:"_id,omitempty"`
-    Title       string             `json:"title,omitempty"        validate:"required"`
-    Description string             `json:"description,omitempty"  validate:"required"`
-    Date        string             `json:"date,omitempty"         validate:"required"`
-    Seasons     int                `json:"seasons,omitempty"      bson:"seasons,omitempty"`
-    Genre       []string           `json:"genre,omitempty"        bson:"genre,omitempty"`
-    Info        string             `json:"info,omitempty"         bson:"info,omitempty"`
-    Popularity  float64            `json:"popularity,omitempty"   bson:"popularity,omitempty"`
-    VoteCount   int                `json:"voteCount,omitempty"    bson:"voteCount,omitempty"`
-    VoteRating  float64            `json:"voteRating,omitempty"   bson:"voteRating,omitempty"`
-    Rating      string             `json:"rating,omitempty"       bson:"rating,omitempty"`
-    Image       string             `json:"image,omitempty"        bson:"image,omitempty"`
-    TMDB        int                `json:"TMDB,omitempty"         bson:"TMDB,omitempty"`
-    IMDB        string             `json:"IMDB,omitempty"         bson:"IMDB,omitempty"`
+    Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"`
+    // basic info
+    Title       string                  `json:"title,omitempty"        validate:"required"`
+    Description string                  `json:"description,omitempty"  validate:"required"`
+    Date        string                  `json:"date,omitempty"         validate:"required"`
+    Seasons     int                     `json:"seasons,omitempty"      bson:"seasons,omitempty"`
+    Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"`
+    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"`
+    // reviews
+    Popularity  float64                 `json:"popularity,omitempty"   bson:"popularity,omitempty"`
+    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount,omitempty"`
+    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"`
+    Rating      string                  `json:"rating,omitempty"       bson:"rating,omitempty"`
+    // other media
+    Image       string                  `json:"image,omitempty"        bson:"image,omitempty"`
+    // external ids
+    TMDB        int                     `json:"TMDB,omitempty"         bson:"TMDB,omitempty"`
+    IMDB        string                  `json:"IMDB,omitempty"         bson:"IMDB,omitempty"`
+    // adjcent media
+    AdjShows    []primitive.ObjectID    `json:"adjShows,omitempty"     bson:"adjShows,omitempty"`
+    AdjMovies   []primitive.ObjectID    `json:"adjMovies,omitempty"    bson:"adjMovies,omitempty"`
 }
 
 
 type ShowSeason struct {
-    ShowId      primitive.ObjectID `json:"showId,omitempty"       validate:"required"`
-    SeasonID    uint               `json:"seasonId,omitempty"     validate:"required"`
-    Epesodes    uint               `json:"epesodes,omitempty"     validate:"required"`
-    Date        string             `json:"date,omitempty"         bson:"date,omitempty"`
-    Popularity  float64            `json:"popularity,omitempty"   bson:"popularity,omitempty"`
-    VoteCount   int                `json:"voteCount,omitempty"    bson:"voteCount,omitempty"`
-    VoteRating  float64            `json:"voteRating,omitempty"   bson:"voteRating,omitempty"`
-    Rating      string             `json:"rating,omitempty"       bson:"rating,omitempty"`
-    Image       string             `json:"image,omitempty"        bson:"image,omitempty"`
+    ShowId      primitive.ObjectID      `json:"showId,omitempty"       validate:"required"`
+    SeasonID    int                     `json:"seasonId,omitempty"     validate:"required"`
+    Episodes    int                     `json:"epesodes,omitempty"     validate:"required"`
+    Description string                  `json:"description,omitempty"  validate:"required"`
+    Date        string                  `json:"date,omitempty"         validate:"required"`
+    Image       string                  `json:"image,omitempty"        bson:"image,omitempty"`
 }
 
 
 type ShowEpisode struct {
-    ShowId      primitive.ObjectID `json:"showId,omitempty"       validate:"required"`
-    SeasonID    uint               `json:"seasonId,omitempty"     validate:"required"`
-    EpesodeID   uint               `json:"epesodeId,omitempty"    validate:"required"`
-    Title       string             `json:"title,omitempty"        validate:"required"`
-    Date        string             `json:"date,omitempty"         bson:"date,omitempty"`
-    Popularity  float64            `json:"popularity,omitempty"   bson:"popularity,omitempty"`
-    VoteCount   int                `json:"voteCount,omitempty"    bson:"voteCount,omitempty"`
-    VoteRating  float64            `json:"voteRating,omitempty"   bson:"voteRating,omitempty"`
-    Image       string             `json:"image,omitempty"        bson:"image,omitempty"`
+    ShowId      primitive.ObjectID      `json:"showId,omitempty"       validate:"required"`
+    SeasonID    int                     `json:"seasonId,omitempty"     validate:"required"`
+    EpisodeID   int                     `json:"epesodeId,omitempty"    validate:"required"`
+    Title       string                  `json:"title,omitempty"        validate:"required"`
+    Description string                  `json:"description,omitempty"  validate:"required"`
+    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"`
+    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount,omitempty"`
+    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"`
+    Image       string                  `json:"image,omitempty"        bson:"image,omitempty"`
 }
 
 var ShowCollection *mongo.Collection = configs.GetCollection(configs.DB, "show")
@@ -68,6 +72,8 @@ func (s *Show) Save() error {
     filter := bson.M{"title": s.Title, "date": s.Date}
     _, err := ShowCollection.UpdateOne(ctx, filter, update, updateOpts)
 
+    err = ShowCollection.FindOne(ctx, filter).Decode(s)
+    
     return err
 }
 
@@ -95,7 +101,7 @@ func (s *ShowEpisode) Save() error {
     }
 
     update := bson.D{{"$set", *s}}
-    filter := bson.M{"seasonId": s.SeasonID, "showId": s.ShowId, "epesodeId": s.EpesodeID}
+    filter := bson.M{"seasonId": s.SeasonID, "showId": s.ShowId, "epesodeId": s.EpisodeID}
     _, err := ShowEpisodeCollection.UpdateOne(ctx, filter, update, updateOpts)
 
     return err

@@ -71,10 +71,16 @@ func MovieDetails() gin.HandlerFunc {
 
 func PersonDetails() gin.HandlerFunc {
     return func(c *gin.Context) {
-        // ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-        // defer cancel()
+        query := c.Param("personId")
+        objId, _ := primitive.ObjectIDFromHex(query)
 
-        c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
+        results, err := models.FindPerson(bson.D{{"_id", objId}})
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+            return
+        }
+
+        c.JSON(http.StatusOK, map[string]interface{}{"people": results})
     }
 }
 
