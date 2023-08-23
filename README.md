@@ -6,4 +6,3 @@ to run
 node ./bin/www
 it will show nothing
 
-wdqwdd
