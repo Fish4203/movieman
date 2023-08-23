@@ -1,5 +1,4 @@
-this is bad
-
+# a meidia tracking app made using go and react 
 
 to run
 go main.go run
