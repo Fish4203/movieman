@@ -23,7 +23,7 @@ type Show struct {
     VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"`
     Rating      string                  `json:"rating,omitempty"       bson:"rating,omitempty"`
     // other media
-    Image       string                  `json:"image,omitempty"        bson:"image,omitempty"`
+    Image       []string                `json:"image,omitempty"        bson:"image,omitempty"`
     // external ids
     TMDB        int                     `json:"TMDB,omitempty"         bson:"TMDB,omitempty"`
     IMDB        string                  `json:"IMDB,omitempty"         bson:"IMDB,omitempty"`
@@ -59,53 +59,69 @@ var ShowCollection *mongo.Collection = configs.GetCollection(configs.DB, "show")
 var ShowSeasonCollection *mongo.Collection = configs.GetCollection(configs.DB, "showSeason")
 var ShowEpisodeCollection *mongo.Collection = configs.GetCollection(configs.DB, "showEpisode")
 
+func (s *Show) Write() mongo.WriteModel {
+    updateModel := mongo.NewUpdateOneModel()
+    updateModel.SetFilter(bson.M{"title": s.Title, "date": s.Date}) 
+    updateModel.SetUpdate(bson.D{{"$set", *s}})
+    updateModel.SetUpsert(true)
 
-func (s *Show) Save() error {
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+    return updateModel
+}
 
-    if err := validate.Struct(s); err != nil {
-        return err
-    }
-
-    update := bson.D{{"$set", *s}}
-    filter := bson.M{"title": s.Title, "date": s.Date}
-    _, err := ShowCollection.UpdateOne(ctx, filter, update, updateOpts)
-
-    err = ShowCollection.FindOne(ctx, filter).Decode(s)
+func (s *ShowSeason) Write() mongo.WriteModel {
+    updateModel := mongo.NewUpdateOneModel()
+    updateModel.SetFilter(bson.M{"seasonId": s.SeasonID, "showId": s.ShowId}) 
+    updateModel.SetUpdate(bson.D{{"$set", *s}})
+    updateModel.SetUpsert(true)
     
-    return err
+    return updateModel
 }
 
-func (s *ShowSeason) Save() error {
+func (s *ShowEpisode) Write() mongo.WriteModel {
+    updateModel := mongo.NewUpdateOneModel()
+    updateModel.SetFilter(bson.M{"seasonId": s.SeasonID, "showId": s.ShowId, "epesodeId": s.EpisodeID}) 
+    updateModel.SetUpdate(bson.D{{"$set", *s}})
+    updateModel.SetUpsert(true)
+
+    return updateModel
+}
+
+func WriteShow(models []mongo.WriteModel) error {
+    if len(models) == 0 {
+        return nil
+    }
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
-    if err := validate.Struct(s); err != nil {
-        return err
-    }
-
-    update := bson.D{{"$set", *s}}
-    filter := bson.M{"seasonId": s.SeasonID, "showId": s.ShowId}
-    _, err := ShowSeasonCollection.UpdateOne(ctx, filter, update, updateOpts)
+    _, err := ShowCollection.BulkWrite(ctx, models)
 
     return err
 }
 
-func (s *ShowEpisode) Save() error {
+func WriteShowSeason(models []mongo.WriteModel) error {
+    if len(models) == 0 {
+        return nil
+    }
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
-    if err := validate.Struct(s); err != nil {
-        return err
-    }
-
-    update := bson.D{{"$set", *s}}
-    filter := bson.M{"seasonId": s.SeasonID, "showId": s.ShowId, "epesodeId": s.EpisodeID}
-    _, err := ShowEpisodeCollection.UpdateOne(ctx, filter, update, updateOpts)
+    _, err := ShowSeasonCollection.BulkWrite(ctx, models)
 
     return err
 }
+
+func WriteShowEpisode(models []mongo.WriteModel) error {
+    if len(models) == 0 {
+        return nil
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    _, err := ShowEpisodeCollection.BulkWrite(ctx, models)
+
+    return err
+}
+
 
 func FindShow(filter bson.D) ([]Show, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

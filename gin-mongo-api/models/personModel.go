@@ -14,7 +14,7 @@ type Person struct {
     Description string             `json:"description,omitempty"  bson:"description,omitempty"`
     Role        string             `json:"role,omitempty"         bson:"role,omitempty"`
     Date        string             `json:"date,omitempty"         bson:"date,omitempty"`
-    Image       string             `json:"image,omitempty"        bson:"image,omitempty"`
+    Image       []string           `json:"image,omitempty"        bson:"image,omitempty"`
     Popularity  float64            `json:"popularity,omitempty"   bson:"popularity,omitempty"`
     TMDB        int                `json:"TMDB,omitempty"         bson:"TMDB,omitempty"`
     IMDB        string             `json:"IMDB,omitempty"         bson:"IMDB,omitempty"`
@@ -23,20 +23,27 @@ type Person struct {
 var PersonCollection *mongo.Collection = configs.GetCollection(configs.DB, "person")
 
 
-func (p *Person) Save() error {
+
+func (p *Person) Write() mongo.WriteModel {
+    updateModel := mongo.NewUpdateOneModel()
+    updateModel.SetFilter(bson.M{"name": p.Name, "date": p.Date}) 
+    updateModel.SetUpdate(bson.D{{"$set", *p}})
+    updateModel.SetUpsert(true)
+
+    return updateModel
+}
+
+func WritePerson(models []mongo.WriteModel) error {
+    if len(models) == 0 {
+        return nil
+    }
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
-    if err := validate.Struct(p); err != nil {
-        return err
-    }
-
-    filter := bson.M{"name": p.Name, "date": p.Date}
-    _, err := PersonCollection.UpdateOne(ctx, filter, bson.D{{"$set", *p}}, updateOpts)
+    _, err := PersonCollection.BulkWrite(ctx, models)
 
     return err
 }
-
 
 func FindPerson(filter bson.D) ([]Person, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

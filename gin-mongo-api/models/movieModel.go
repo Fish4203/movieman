@@ -6,13 +6,12 @@ import (
     "gin-mongo-api/configs"
     "github.com/go-playground/validator/v10"
     "go.mongodb.org/mongo-driver/mongo"
-    "go.mongodb.org/mongo-driver/mongo/options"
+    // "go.mongodb.org/mongo-driver/mongo/options"
     "go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var validate = validator.New()
-var updateOpts = options.Update().SetUpsert(true)
 
 type Movie struct {
     Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"`
@@ -30,7 +29,7 @@ type Movie struct {
     VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount, omitempty"`
     VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"`
     // related media
-    Image       string                  `json:"image,omitempty"        bson:"image,omitempty"`
+    Image       []string                `json:"image,omitempty"        bson:"image,omitempty"`
     // ids
     TMDB        int                     `json:"TMDB,omitempty"         bson:"TMDB,omitempty"`
     IMDB        string                  `json:"IMDB,omitempty"         bson:"IMDB,omitempty"`
@@ -42,18 +41,23 @@ type Movie struct {
 var MovieCollection *mongo.Collection = configs.GetCollection(configs.DB, "movie")
 
 
-func (m *Movie) Save() error {
+func (m *Movie) Write() mongo.WriteModel {
+    updateModel := mongo.NewUpdateOneModel()
+    updateModel.SetFilter(bson.M{"title": m.Title, "date": m.Date}) 
+    updateModel.SetUpdate(bson.D{{"$set", *m}})
+    updateModel.SetUpsert(true)
+
+    return updateModel
+}
+
+func WriteMovie(models []mongo.WriteModel) error {
+    if len(models) == 0 {
+        return nil
+    }
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
 
-    if err := validate.Struct(m); err != nil {
-        return err
-    }
-
-    filter := bson.M{"title": m.Title, "date": m.Date}
-    _, err := MovieCollection.UpdateOne(ctx, filter, bson.D{{"$set", *m}}, updateOpts)
-
-    err = MovieCollection.FindOne(ctx, filter).Decode(m)
+    _, err := MovieCollection.BulkWrite(ctx, models)
 
     return err
 }

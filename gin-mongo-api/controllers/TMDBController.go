@@ -18,9 +18,9 @@ import (
 
     "github.com/gin-gonic/gin"
     // "github.com/go-playground/validator/v10"
-    // "go.mongodb.org/mongo-driver/bson"
-    "go.mongodb.org/mongo-driver/bson/primitive"
-    // "go.mongodb.org/mongo-driver/mongo"
+    "go.mongodb.org/mongo-driver/bson"
+    // "go.mongodb.org/mongo-driver/bson/primitive"
+    "go.mongodb.org/mongo-driver/mongo"
     // "golang.org/x/crypto/bcrypt"
 )
 
@@ -62,7 +62,7 @@ func movieDecoderTMDB(json map[string]interface{}) models.Movie {
         movie.Budget = int(json["budget"].(float64))
     }
     if json["poster_path"] != nil {
-        movie.Image = json["poster_path"].(string)
+        movie.Image = append(movie.Image, json["poster_path"].(string))
     }
 
     return movie
@@ -79,7 +79,7 @@ func personDecoderTMDB(json map[string]interface{}) models.Person {
     }
 
     if json["profile_path"] != nil {
-        person.Image = json["profile_path"].(string)
+        person.Image = append(person.Image, json["profile_path"].(string))
     }
     if json["birthday"] != nil {
         person.Date = json["birthday"].(string)
@@ -109,7 +109,7 @@ func showDecoderTMDB(json map[string]interface{}) models.Show {
         show.Info = json["homepage"].(string)
     }
     if json["poster_path"] != nil {
-        show.Image = json["poster_path"].(string)
+        show.Image = append(show.Image, json["poster_path"].(string))
     }
 
     return show
@@ -206,6 +206,10 @@ func TMDBTest() gin.HandlerFunc {
 
 func TMDBSearch() gin.HandlerFunc {
     return func(c *gin.Context) {
+        var people []mongo.WriteModel
+        var movies []mongo.WriteModel
+        var shows  []mongo.WriteModel
+
         var err error
         query := strings.Replace(c.Query("q"), " ", "%20", -1)
         json, err := getTMDB("search/multi?query=" + query + "&include_adult=false&language=en-US&page=1")
@@ -226,20 +230,38 @@ func TMDBSearch() gin.HandlerFunc {
 
             if result["media_type"] == "tv" {
                 show := showDecoderTMDB(result)
-                err = show.Save()
+                shows = append(shows, show.Write()) 
             } else if result["media_type"] == "movie" {
                 movie := movieDecoderTMDB(result)
-                err = movie.Save()
+                movies = append(movies, movie.Write()) 
             } else {
                 var jsonPerson map[string]interface{}
                 jsonPerson, err = getTMDB("person/" + strconv.Itoa(int(result["id"].(float64))) + "?language=en-US")
                 person := personDecoderTMDB(jsonPerson)
-                err = person.Save()
+                people = append(people, person.Write()) 
             }
             if err != nil {
                 c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             }
         }
+
+        err = models.WritePerson(people)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+ 
+        err = models.WriteMovie(movies)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+
+
+
+        err = models.WriteShow(shows)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+
 
         c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
     }
@@ -247,6 +269,10 @@ func TMDBSearch() gin.HandlerFunc {
 
 func TMDBPopular() gin.HandlerFunc {
     return func(c *gin.Context) {
+        var people []mongo.WriteModel
+        var movies []mongo.WriteModel
+        var shows  []mongo.WriteModel
+
         var err error
         json, err := getTMDB("trending/all/week?language=en-US")
         if err != nil {
@@ -266,19 +292,32 @@ func TMDBPopular() gin.HandlerFunc {
 
             if result["media_type"] == "tv" {
                 show := showDecoderTMDB(result)
-                err = show.Save()
+                shows = append(shows, show.Write()) 
             } else if result["media_type"] == "movie" {
                 movie := movieDecoderTMDB(result)
-                err = movie.Save()
+                movies = append(movies, movie.Write()) 
             } else {
                 var jsonPerson map[string]interface{}
                 jsonPerson, err = getTMDB("person/" + strconv.Itoa(int(result["id"].(float64))) + "?language=en-US")
                 person := personDecoderTMDB(jsonPerson)
-                err = person.Save()
+                people = append(people, person.Write()) 
             }
             if err != nil {
                 c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             }
+        }
+
+        err = models.WritePerson(people)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+        err = models.WriteMovie(movies)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+        err = models.WriteShow(shows)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         }
 
         c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
@@ -289,42 +328,51 @@ func TMDBMovieDetails() gin.HandlerFunc {
     return func(c *gin.Context) {
         query := strings.Replace(c.Param("movieId"), " ", "%20", -1)
         result, err := getTMDB("movie/" + query + "?append_to_response=recommendations&language=en-US")
-
+        
         movie := movieDecoderTMDB(result)
-
-
+        
+        
         recommendations := result["recommendations"].(map[string]interface{})["results"].([]interface{})
-        var movieRecs []primitive.ObjectID
-        var showRecs  []primitive.ObjectID
+        var movies []mongo.WriteModel
+        var shows  []mongo.WriteModel
+        var movieRecs []int
+        var showRecs  []int
 
         for i := 1; i < len(recommendations); i++ {
             recommendation := recommendations[i].(map[string]interface{})
             // fmt.Println(recommendation)
             if recommendation["media_type"] == "tv" {
                 showRec := showDecoderTMDB(recommendation)
-                errRec := showRec.Save()
-
-                if errRec != nil {
-                    c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-                } else {
-                    showRecs = append(showRecs, showRec.Id)
-                }
+                shows = append(shows, showRec.Write())
+                showRecs = append(showRecs, showRec.TMDB)
             } else {
                 movieRec := movieDecoderTMDB(recommendation)
-                errRec := movieRec.Save()
-
-                if errRec != nil {
-                    c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-                } else {
-                    movieRecs = append(movieRecs, movieRec.Id)
-                }
+                movies = append(movies, movieRec.Write())
+                movieRecs = append(movieRecs, movieRec.TMDB)
             }
         }
 
-        movie.AdjMovies = movieRecs
-        movie.AdjShows  = showRecs
+        err = models.WriteMovie(movies)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+        err = models.WriteShow(shows)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
 
-        err = movie.Save()
+        movieRes, _ := models.FindMovie(bson.D{{"TMDB", bson.D{{"$in", movieRecs}}}})
+        showRes, _ := models.FindShow(bson.D{{"TMDB", bson.D{{"$in", showRecs}}}})
+
+        for i := 0; i < len(movieRes); i++ {
+            movie.AdjMovies = append(movie.AdjMovies, movieRes[i].Id)
+        }
+
+        for i := 0; i < len(showRes); i++ {
+            movie.AdjShows = append(movie.AdjShows, showRes[i].Id)
+        }
+        
+        err = models.WriteMovie([]mongo.WriteModel{movie.Write()})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         } else {
@@ -340,12 +388,12 @@ func TMDBPersonDetails() gin.HandlerFunc {
 
         person := personDecoderTMDB(json)
 
-        err = person.Save()
+        err = models.WritePerson([]mongo.WriteModel{person.Write()})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        } else {
+            c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
         }
-
-        c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
     }
 }
 
@@ -357,66 +405,87 @@ func TMDBShowDetails() gin.HandlerFunc {
         show := showDecoderTMDB(result)
 
         recommendations := result["recommendations"].(map[string]interface{})["results"].([]interface{})
-        var movieRecs []primitive.ObjectID
-        var showRecs  []primitive.ObjectID
+        var movies []mongo.WriteModel
+        var shows  []mongo.WriteModel
+        var movieRecs []int
+        var showRecs  []int
 
         for i := 1; i < len(recommendations); i++ {
             recommendation := recommendations[i].(map[string]interface{})
             // fmt.Println(recommendation)
             if recommendation["media_type"] == "tv" {
                 showRec := showDecoderTMDB(recommendation)
-                errRec := showRec.Save()
-
-                if errRec != nil {
-                    c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-                } else {
-                    showRecs = append(showRecs, showRec.Id)
-                }
+                shows = append(shows, showRec.Write())
+                showRecs = append(showRecs, showRec.TMDB)
             } else {
                 movieRec := movieDecoderTMDB(recommendation)
-                errRec := movieRec.Save()
-
-                if errRec != nil {
-                    c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-                } else {
-                    movieRecs = append(movieRecs, movieRec.Id)
-                }
+                movies = append(movies, movieRec.Write())
+                movieRecs = append(movieRecs, movieRec.TMDB)
             }
         }
 
-        show.AdjMovies = movieRecs
-        show.AdjShows  = showRecs
+        err = models.WriteMovie(movies)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+        err = models.WriteShow(shows)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+
+        movieRes, _ := models.FindMovie(bson.D{{"TMDB", bson.D{{"$in", movieRecs}}}})
+        showRes, _ := models.FindShow(bson.D{{"TMDB", bson.D{{"$in", showRecs}}}})
+
+        for i := 0; i < len(movieRes); i++ {
+            show.AdjMovies = append(show.AdjMovies, movieRes[i].Id)
+        }
+
+        for i := 0; i < len(showRes); i++ {
+            show.AdjShows = append(show.AdjShows, showRes[i].Id)
+        }
 
 
-        err = show.Save()
+        err = models.WriteShow([]mongo.WriteModel{show.Write()})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
         }
+        
+        showsres, _ := models.FindShow(bson.D{{"TMDB", show.TMDB}})
+        show = showsres[0]
+
+        var seasons  []mongo.WriteModel
+        var episodes []mongo.WriteModel
 
         for i := 1; i <= show.Seasons; i++ {
             seasonResult, err := getTMDB("tv/" + query + "/season/" + strconv.Itoa(i) + "?language=en-US")
-
-            season := showSeasonDecoderTMDB(seasonResult)
-            season.ShowId = show.Id
-
-            err = season.Save()
             if err != nil {
                 c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             }
 
-            episodes := seasonResult["episodes"].([]interface{})
+            season := showSeasonDecoderTMDB(seasonResult)
+            season.ShowId = show.Id
 
-            for j := 0; j < len(episodes); j++ {
-                episode := showEpisodeDecoderTMDB(episodes[j].(map[string]interface{}))
+            seasons = append(seasons, season.Write()) 
+
+            episodeResults := seasonResult["episodes"].([]interface{})
+
+            for j := 0; j < len(episodeResults); j++ {
+                episode := showEpisodeDecoderTMDB(episodeResults[j].(map[string]interface{}))
                 episode.ShowId = show.Id
                 episode.SeasonID = i
 
-                err = episode.Save()
-                if err != nil {
-                    c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-                }
+                episodes = append(episodes, episode.Write()) 
             }
+        }
+
+        err = models.WriteShowSeason(seasons)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+        err = models.WriteShowEpisode(episodes)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         }
 
         c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
