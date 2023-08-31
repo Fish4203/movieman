@@ -12,7 +12,6 @@ root.render(
   <React.StrictMode>
     <Navigation />
     <Search />
-    <App />
   </React.StrictMode>
 );
 

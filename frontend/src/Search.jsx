@@ -1,19 +1,29 @@
-import logo from './logo.svg';
-import './App.css';
-import { Button, Container, Card, Row, Col } from 'react-bootstrap';
-import React, { useState, useEffect } from 'react';
+import { Button, Container, Card, Row, Col, Form } from 'react-bootstrap';
+import React, { useState } from 'react';
 import axios from 'axios';
+import {Movie, Show, People, Episode} from './results';
+// import "./styles.css";
+
 
 
 function Search() {
-    const [data, setData] = useState([]);
+    const [movies, setMovies] = useState([]);
+    const [shows, setShows] = useState([]);
+    const [people, setPeople] = useState([]);
+    const [episodes, setEpisodes] = useState([]);
+    const [query, setQuery] = useState([]);
 
-    axios.get('http://127.0.0.1:4000/media/search?q=star trek')
+
+    const getSearch = () => {
+        axios.get('http://127.0.0.1:4000/media/search?q=' + query)
       .then(function (response) {
         // handle success
-        setData(response.data.shows);
-        console.log(response.data);
-        console.log();
+        console.log(response.data)
+        setMovies(response.data.movies);
+        setShows(response.data.shows);
+        setPeople(response.data.people);
+        setEpisodes(response.data.episodes);
+        // setData(response.data);
       })
       .catch(function (error) {
         // handle error
@@ -21,77 +31,32 @@ function Search() {
       })
       .finally(function () {
       });
+    }
 
     return (
 
         <Container>
             <h1>Search </h1>
 
-            <ul>
-              {data.map(post => (
-                <li>{post.title}</li>
-              ))}
-            </ul>
-
-            <Row> 
-                <Col> 
-                    <Card>
-                        <Card.Img variant="top" src="https://placehold.co/200x100" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                                Some quick example text to build on the card title and make up the
-                                bulk of the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
-                </Col>
-
-                <Col> 
-                    <Card>
-                        <Card.Img variant="top" src="https://placehold.co/200x100" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                                Some quick example text to build on the card title and make up the
-                                bulk of the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
-                </Col>
-
-                <Col> 
-                    <Card>
-                        <Card.Img variant="top" src="https://placehold.co/200x100" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                                Some quick example text to build on the card title and make up the
-                                bulk of the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
-                </Col>
-
-                <Col> 
-                    <Card>
-                        <Card.Img variant="top" src="https://placehold.co/200x100" />
-                        <Card.Body>
-                            <Card.Title>Card Title</Card.Title>
-                            <Card.Text>
-                                Some quick example text to build on the card title and make up the
-                                bulk of the card's content.
-                            </Card.Text>
-                            <Button variant="primary">Go somewhere</Button>
-                        </Card.Body>
-                    </Card>
-                </Col>
+            <div className="d-flex">
+                <Form.Control
+                    type="search"
+                    placeholder="Search"
+                    className="me-2"
+                    onChange={(event) => setQuery(event.target.value)}
+                    value={query}
+                    onKeyPress={(event) => {if (event.charCode==13) {getSearch()}}}
+                />
+                <Button onClick={getSearch}>Search</Button>
+            </div>
 
 
-            </Row>
+
+            <Show  shows={shows}/>
+            <Movie movies={movies}/>
+            <Episode episodes={episodes}/>
+            <People people={people}/>
+
             
 
         </Container>
