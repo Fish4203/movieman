@@ -4,42 +4,39 @@ import (
     "time"
     "context"
     "gin-mongo-api/configs"
-    "github.com/go-playground/validator/v10"
+    // "github.com/go-playground/validator/v10"
     "go.mongodb.org/mongo-driver/mongo"
     // "go.mongodb.org/mongo-driver/mongo/options"
     "go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var validate = validator.New()
 
 type Movie struct {
     Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"`
     // basic info
-    Title       string                  `json:"title,omitempty"        validate:"required"`
-    Description string                  `json:"description,omitempty"  validate:"required"`
-    Date        string                  `json:"date,omitempty"         validate:"required"`
+    Title       string                  `json:"title,omitempty"        bson:"title,omitempty"       tmdb:"title"        validate:"required"`
+    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview"     validate:"required"`
+    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"release_date" validate:"required"`
     Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"`
-    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"`
-    Budget      int                     `json:"budget,omitempty"       bson:"budget,omitempty"`
-    Length      int                     `json:"length,omitempty"       bson:"length,omitempty"`
+    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"        tmdb:"homepage"`
+    Budget      int                     `json:"budget,omitempty"       bson:"budget,omitempty"      tmdb:"budget"`
+    Length      int                     `json:"length,omitempty"       bson:"length,omitempty"      tmdb:"runtime"`
     Rating      string                  `json:"rating,omitempty"       bson:"rating,omitempty"`
     // pupularity
-    Popularity  float64                 `json:"popularity,omitempty"   bson:"popularity,omitempty"`
-    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount, omitempty"`
-    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"`
+    Popularity  float64                 `json:"popularity,omitempty"   bson:"popularity,omitempty"  tmdb:"popularity"`
+    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount, omitempty"  tmdb:"vote_count"`
+    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"  tmdb:"vote_average"`
     // related media
-    Image       []string                `json:"image,omitempty"        bson:"image,omitempty"`
+    Images      []string                `json:"images,omitempty"       bson:"images,omitempty"`
     // ids
-    TMDB        int                     `json:"TMDB,omitempty"         bson:"TMDB,omitempty"`
-    IMDB        string                  `json:"IMDB,omitempty"         bson:"IMDB,omitempty"`
-    // adjacent media
-    AdjShows    []primitive.ObjectID    `json:"adjShows,omitempty"     bson:"adjShows,omitempty"`
-    AdjMovies   []primitive.ObjectID    `json:"adjMovies,omitempty"    bson:"adjMovies,omitempty"`
+    ExternalIds map[string]string       `json:"externalIds,omitempty"  bson:"externalIds,omitempty"`
+    Platforms   []string                `json:"platforms,omitempty"    bson:"platforms,omitempty"`
 }
 
-var MovieCollection *mongo.Collection = configs.GetCollection(configs.DB, "movie")
+var movieCollection *mongo.Collection = configs.GetCollection(configs.DB, "movie")
 
+func (m *Movie) Collection() *mongo.Collection {return movieCollection}
 
 func (m *Movie) Write() mongo.WriteModel {
     updateModel := mongo.NewUpdateOneModel()
@@ -50,24 +47,13 @@ func (m *Movie) Write() mongo.WriteModel {
     return updateModel
 }
 
-func WriteMovie(models []mongo.WriteModel) error {
-    if len(models) == 0 {
-        return nil
-    }
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
-
-    _, err := MovieCollection.BulkWrite(ctx, models)
-
-    return err
-}
 
 func FindMovie(filter bson.D) ([]Movie, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     var movies []Movie
     defer cancel()
 
-    results, err := MovieCollection.Find(ctx, filter)
+    results, err := movieCollection.Find(ctx, filter)
     if err != nil {
         return movies, err
     }

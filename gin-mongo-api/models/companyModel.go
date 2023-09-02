@@ -8,13 +8,12 @@ import (
     "go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/bson/primitive"
 )
-type Person struct {
+type Company struct {
     Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"`
     //basic info
-    Name        string                  `json:"name,omitempty"         bson:"name,omitempty"        tmdb:"name"    validate:"required"`
-    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"biography"`
-    Role        string                  `json:"role,omitempty"         bson:"role,omitempty"        tmdb:"known_for_department"`
-    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"birthday"`
+    Name        string                  `json:"name,omitempty"         bson:"name,omitempty"        validate:"required"`
+    Description string                  `json:"description,omitempty"  bson:"description,omitempty" `
+	Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        `
     // extra media 
     Image       []string                `json:"image,omitempty"        bson:"image,omitempty"`
     ExternalIds map[string]string       `json:"externalIds,omitempty"  bson:"externalIds,omitempty"`
@@ -25,12 +24,12 @@ type Person struct {
     Games       []primitive.ObjectID    `json:"games,omitempty"        bson:"games,omitempty"`
 }
 
-var personCollection *mongo.Collection = configs.GetCollection(configs.DB, "person")
+var companyCollection *mongo.Collection = configs.GetCollection(configs.DB, "company")
 
-func (o *Person) Collection() *mongo.Collection {return personCollection}
+func (o *Company) Collection() *mongo.Collection {return companyCollection}
 
 
-func (p *Person) Write() mongo.WriteModel {
+func (p *Company) Write() mongo.WriteModel {
     updateModel := mongo.NewUpdateOneModel()
     updateModel.SetFilter(bson.M{"name": p.Name, "date": p.Date}) 
     updateModel.SetUpdate(bson.D{{"$set", *p}})
@@ -39,25 +38,25 @@ func (p *Person) Write() mongo.WriteModel {
     return updateModel
 }
 
-func FindPerson(filter bson.D) ([]Person, error) {
+func FindCompany(filter bson.D) ([]Company, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    var persons []Person
+    var companys []Company
     defer cancel()
 
-    results, err := personCollection.Find(ctx, filter)
+    results, err := companyCollection.Find(ctx, filter)
     if err != nil {
-        return persons, err
+        return companys, err
     }
 
     //reading from the db in an optimal way
     defer results.Close(ctx)
     for results.Next(ctx) {
-        var singlePerson Person
-        if err = results.Decode(&singlePerson); err != nil {
-            return persons, err
+        var singleCompany Company
+        if err = results.Decode(&singleCompany); err != nil {
+            return companys, err
         }
-        persons = append(persons, singlePerson)
+        companys = append(companys, singleCompany)
     }
 
-    return persons, nil
+    return companys, nil
 }
