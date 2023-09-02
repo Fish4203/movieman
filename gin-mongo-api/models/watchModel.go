@@ -22,20 +22,31 @@ type Watch struct {
 
 var watchCollection *mongo.Collection = configs.GetCollection(configs.DB, "watch")
 
-func (o *Watch) Collection() *mongo.Collection {return watchCollection}
+func WriteWatch(models []Watch) error {
+    if len(models) == 0 {
+        return nil
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
 
-func (o *Watch) Write() mongo.WriteModel {
-    updateModel := mongo.NewUpdateOneModel()
-    updateModel.SetFilter(bson.M{"user": o.User, "$or": bson.A{
-        bson.M{"movie": o.Movie},
-        bson.M{"show": o.Game},
-        bson.M{"book": o.Book},
-        bson.M{"game": o.Game},
-    }}) 
-    updateModel.SetUpdate(bson.D{{"$set", *o}})
-    updateModel.SetUpsert(true)
+    var writeObjs []mongo.WriteModel 
+	for i := 0; i < len(models); i++ {
+        updateModel := mongo.NewUpdateOneModel()
+        updateModel.SetFilter(bson.M{"user": models[i].User, "$or": bson.A{
+            bson.M{"movie": models[i].Movie},
+            bson.M{"show": models[i].Game},
+            bson.M{"book": models[i].Book},
+            bson.M{"game": models[i].Game},
+        }}) 
+        updateModel.SetUpdate(bson.D{{"$set", models[i]}})
+        updateModel.SetUpsert(true)
 
-    return updateModel
+		writeObjs = append(writeObjs, updateModel)
+	}
+	
+    _, err := watchCollection.BulkWrite(ctx, writeObjs)
+
+    return err
 }
 
 

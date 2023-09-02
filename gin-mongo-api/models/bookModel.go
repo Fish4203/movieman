@@ -33,17 +33,27 @@ type Book struct {
 
 var bookCollection *mongo.Collection = configs.GetCollection(configs.DB, "book")
 
-func (b *Book) Collection() *mongo.Collection {return bookCollection}
+func WriteBook(models []Book) error {
+    if len(models) == 0 {
+        return nil
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
 
-func (o *Book) Write() mongo.WriteModel {
-    updateModel := mongo.NewUpdateOneModel()
-    updateModel.SetFilter(bson.M{"title": o.Title, "date": o.Date}) 
-    updateModel.SetUpdate(bson.D{{"$set", *o}})
-    updateModel.SetUpsert(true)
+    var writeObjs []mongo.WriteModel 
+	for i := 0; i < len(models); i++ {
+        updateModel := mongo.NewUpdateOneModel()
+        updateModel.SetFilter(bson.M{"title": models[i].Title, "date": models[i].Date}) 
+        updateModel.SetUpdate(bson.D{{"$set", models[i]}})
+        updateModel.SetUpsert(true)
 
-    return updateModel
+		writeObjs = append(writeObjs, updateModel)
+	}
+	
+    _, err := bookCollection.BulkWrite(ctx, writeObjs)
+
+    return err
 }
-
 
 func FindBook(filter bson.D) ([]Book, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

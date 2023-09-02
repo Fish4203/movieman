@@ -13,38 +13,49 @@ import (
 
 
 type Movie struct {
-    Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"`
+    Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"         `
     // basic info
     Title       string                  `json:"title,omitempty"        bson:"title,omitempty"       tmdb:"title"        validate:"required"`
-    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview"     validate:"required"`
-    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"release_date" validate:"required"`
-    Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"`
-    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"        tmdb:"homepage"`
-    Budget      int                     `json:"budget,omitempty"       bson:"budget,omitempty"      tmdb:"budget"`
-    Length      int                     `json:"length,omitempty"       bson:"length,omitempty"      tmdb:"runtime"`
-    Rating      string                  `json:"rating,omitempty"       bson:"rating,omitempty"`
+    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview,omitempty"     validate:"required"`
+    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"release_date,omitempty" validate:"required"`
+    Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"       `
+    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"        tmdb:"homepage,omitempty"`
+    Budget      int                     `json:"budget,omitempty"       bson:"budget,omitempty"      tmdb:"budget,omitempty"`
+    Length      int                     `json:"length,omitempty"       bson:"length,omitempty"      tmdb:"runtime,omitempty"`
+    Rating      string                  `json:"rating,omitempty"       bson:"rating,omitempty"      `
     // pupularity
-    Popularity  float64                 `json:"popularity,omitempty"   bson:"popularity,omitempty"  tmdb:"popularity"`
-    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount, omitempty"  tmdb:"vote_count"`
-    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"  tmdb:"vote_average"`
+    Popularity  float64                 `json:"popularity,omitempty"   bson:"popularity,omitempty"  tmdb:"popularity,omitempty"`
+    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount, omitempty"  tmdb:"vote_count,omitempty"`
+    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"  tmdb:"vote_average,omitempty"`
     // related media
-    Images      []string                `json:"images,omitempty"       bson:"images,omitempty"`
+    Images      []string                `json:"images,omitempty"       bson:"images,omitempty"      tmdb:"poster_path,omitempty"`
     // ids
-    ExternalIds map[string]string       `json:"externalIds,omitempty"  bson:"externalIds,omitempty"`
-    Platforms   []string                `json:"platforms,omitempty"    bson:"platforms,omitempty"`
+    ExternalIds map[string]string       `json:"externalIds,omitempty"  bson:"externalIds,omitempty" `
+    Platforms   []string                `json:"platforms,omitempty"    bson:"platforms,omitempty"   `
 }
 
 var movieCollection *mongo.Collection = configs.GetCollection(configs.DB, "movie")
 
-func (m *Movie) Collection() *mongo.Collection {return movieCollection}
+func WriteMovie(models []Movie) error {
+    if len(models) == 0 {
+        return nil
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
 
-func (m *Movie) Write() mongo.WriteModel {
-    updateModel := mongo.NewUpdateOneModel()
-    updateModel.SetFilter(bson.M{"title": m.Title, "date": m.Date}) 
-    updateModel.SetUpdate(bson.D{{"$set", *m}})
-    updateModel.SetUpsert(true)
+    var writeObjs []mongo.WriteModel 
+	for i := 0; i < len(models); i++ {
+        updateModel := mongo.NewUpdateOneModel()
+        updateModel.SetFilter(bson.M{"title": models[i].Title, "date": models[i].Date}) 
+        updateModel.SetUpdate(bson.D{{"$set", models[i]}})
+        updateModel.SetUpsert(true)
 
-    return updateModel
+		writeObjs = append(writeObjs, updateModel)
+	}
+	
+    _, err := movieCollection.BulkWrite(ctx, writeObjs)
+
+    return err
 }
 
 

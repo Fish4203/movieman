@@ -36,15 +36,26 @@ type Group struct {
 
 var groupCollection *mongo.Collection = configs.GetCollection(configs.DB, "group")
 
-func (o *Group) Collection() *mongo.Collection {return groupCollection}
+func WriteGroup(models []Group) error {
+    if len(models) == 0 {
+        return nil
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
 
-func (o *Group) Write() mongo.WriteModel {
-    updateModel := mongo.NewUpdateOneModel()
-    updateModel.SetFilter(bson.M{"title": o.Title}) 
-    updateModel.SetUpdate(bson.D{{"$set", *o}})
-    updateModel.SetUpsert(true)
+    var writeObjs []mongo.WriteModel 
+	for i := 0; i < len(models); i++ {
+        updateModel := mongo.NewUpdateOneModel()
+        updateModel.SetFilter(bson.M{"title": models[i].Title}) 
+        updateModel.SetUpdate(bson.D{{"$set", models[i]}})
+        updateModel.SetUpsert(true)
 
-    return updateModel
+		writeObjs = append(writeObjs, updateModel)
+	}
+	
+    _, err := groupCollection.BulkWrite(ctx, writeObjs)
+
+    return err
 }
 
 func FindGroup(filter bson.D) ([]Group, error) {

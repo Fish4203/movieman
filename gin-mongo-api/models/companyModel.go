@@ -26,16 +26,26 @@ type Company struct {
 
 var companyCollection *mongo.Collection = configs.GetCollection(configs.DB, "company")
 
-func (o *Company) Collection() *mongo.Collection {return companyCollection}
+func WriteCompany(models []Company) error {
+    if len(models) == 0 {
+        return nil
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    
+    var writeObjs []mongo.WriteModel 
+	for i := 0; i < len(models); i++ {
+        updateModel := mongo.NewUpdateOneModel()
+        updateModel.SetFilter(bson.M{"title": models[i].Name, "date": models[i].Date}) 
+        updateModel.SetUpdate(bson.D{{"$set", models[i]}})
+        updateModel.SetUpsert(true)
 
+		writeObjs = append(writeObjs, updateModel)
+	}
+	
+    _, err := companyCollection.BulkWrite(ctx, writeObjs)
 
-func (p *Company) Write() mongo.WriteModel {
-    updateModel := mongo.NewUpdateOneModel()
-    updateModel.SetFilter(bson.M{"name": p.Name, "date": p.Date}) 
-    updateModel.SetUpdate(bson.D{{"$set", *p}})
-    updateModel.SetUpsert(true)
-
-    return updateModel
+    return err
 }
 
 func FindCompany(filter bson.D) ([]Company, error) {

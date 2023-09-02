@@ -9,24 +9,24 @@ import (
     "go.mongodb.org/mongo-driver/bson/primitive"
 )
 type Show struct {
-    Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"`
+    Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"         `
     // basic info
-    Title       string                  `json:"title,omitempty"        bson:"title,omitempty"       tmdb:"name"             validate:"required"`
-    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview"         validate:"required"`
-    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"first_air_date"   validate:"required"`
-    Seasons     int                     `json:"seasons,omitempty"      bson:"seasons,omitempty"     tmdb:"number_of_seasons"`
-    Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"`
-    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"        tmdb:"homepage"`
+    Title       string                  `json:"title,omitempty"        bson:"title,omitempty"       tmdb:"name,omitempty"             validate:"required"`
+    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview,omitempty"         validate:"required"`
+    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"first_air_date,omitempty"   validate:"required"`
+    Seasons     int                     `json:"seasons,omitempty"      bson:"seasons,omitempty"     tmdb:"number_of_seasons,omitempty"`
+    Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"       `      
+    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"        tmdb:"homepage,omitempty"`
     // reviews
-    Popularity  float64                 `json:"popularity,omitempty"   bson:"popularity,omitempty"  tmdb:"popularity"`
-    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount,omitempty"   tmdb:"vote_count"`
-    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"  tmdb:"vote_average"`
-    Rating      string                  `json:"rating,omitempty"       bson:"rating,omitempty"`
+    Popularity  float64                 `json:"popularity,omitempty"   bson:"popularity,omitempty"  tmdb:"popularity,omitempty"`
+    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount,omitempty"   tmdb:"vote_count,omitempty"`
+    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"  tmdb:"vote_average,omitempty"`
+    Rating      string                  `json:"rating,omitempty"       bson:"rating,omitempty"      `
     // other media
-    Images      []string                `json:"images,omitempty"       bson:"images,omitempty"`
+    Images      []string                `json:"images,omitempty"       bson:"images,omitempty"      tmdb"poster_path,omitempty"`
     // external ids
-    Platforms   []string                `json:"platforms,omitempty"    bson:"platforms,omitempty"`
-    ExternalIds map[string]string       `json:"externalIds,omitempty"  bson:"externalIds,omitempty"`
+    Platforms   []string                `json:"platforms,omitempty"    bson:"platforms,omitempty"   `
+    ExternalIds map[string]string       `json:"externalIds,omitempty"  bson:"externalIds,omitempty" `
 }
 
 
@@ -63,36 +63,70 @@ var showCollection *mongo.Collection = configs.GetCollection(configs.DB, "show")
 var showSeasonCollection *mongo.Collection = configs.GetCollection(configs.DB, "showSeason")
 var showEpisodeCollection *mongo.Collection = configs.GetCollection(configs.DB, "showEpisode")
 
-func (s *Show) Collection() *mongo.Collection {return showCollection}
-func (s *ShowSeason) Collection() *mongo.Collection {return showSeasonCollection}
-func (s *ShowEpisode) Collection() *mongo.Collection {return showEpisodeCollection}
+func WriteShow(models []Show) error {
+    if len(models) == 0 {
+        return nil
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
 
+    var writeObjs []mongo.WriteModel 
+	for i := 0; i < len(models); i++ {
+        updateModel := mongo.NewUpdateOneModel()
+        updateModel.SetFilter(bson.M{"title": models[i].Title, "date": models[i].Date}) 
+        updateModel.SetUpdate(bson.D{{"$set", models[i]}})
+        updateModel.SetUpsert(true)
 
-func (s *Show) Write() mongo.WriteModel {
-    updateModel := mongo.NewUpdateOneModel()
-    updateModel.SetFilter(bson.M{"title": s.Title, "date": s.Date}) 
-    updateModel.SetUpdate(bson.D{{"$set", *s}})
-    updateModel.SetUpsert(true)
+		writeObjs = append(writeObjs, updateModel)
+	}
+	
+    _, err := showCollection.BulkWrite(ctx, writeObjs)
 
-    return updateModel
+    return err
 }
 
-func (s *ShowSeason) Write() mongo.WriteModel {
-    updateModel := mongo.NewUpdateOneModel()
-    updateModel.SetFilter(bson.M{"seasonId": s.SeasonID, "showId": s.ShowId}) 
-    updateModel.SetUpdate(bson.D{{"$set", *s}})
-    updateModel.SetUpsert(true)
-    
-    return updateModel
+func WriteShowSeason(models []ShowSeason) error {
+    if len(models) == 0 {
+        return nil
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    var writeObjs []mongo.WriteModel 
+	for i := 0; i < len(models); i++ {
+        updateModel := mongo.NewUpdateOneModel()
+        updateModel.SetFilter(bson.M{"seasonId": models[i].SeasonID, "showId": models[i].ShowId}) 
+        updateModel.SetUpdate(bson.D{{"$set", models[i]}})
+        updateModel.SetUpsert(true)
+
+		writeObjs = append(writeObjs, updateModel)
+	}
+	
+    _, err := showSeasonCollection.BulkWrite(ctx, writeObjs)
+
+    return err
 }
 
-func (s *ShowEpisode) Write() mongo.WriteModel {
-    updateModel := mongo.NewUpdateOneModel()
-    updateModel.SetFilter(bson.M{"seasonId": s.SeasonID, "showId": s.ShowId, "epesodeId": s.EpisodeID}) 
-    updateModel.SetUpdate(bson.D{{"$set", *s}})
-    updateModel.SetUpsert(true)
+func WriteShowEpisode(models []ShowEpisode) error {
+    if len(models) == 0 {
+        return nil
+    }
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
 
-    return updateModel
+    var writeObjs []mongo.WriteModel 
+	for i := 0; i < len(models); i++ {
+        updateModel := mongo.NewUpdateOneModel()
+        updateModel.SetFilter(bson.M{"seasonId": models[i].SeasonID, "showId": models[i].ShowId, "epesodeId": models[i].EpisodeID}) 
+        updateModel.SetUpdate(bson.D{{"$set", models[i]}})
+        updateModel.SetUpsert(true)
+
+		writeObjs = append(writeObjs, updateModel)
+	}
+	
+    _, err := showEpisodeCollection.BulkWrite(ctx, writeObjs)
+
+    return err
 }
 
 

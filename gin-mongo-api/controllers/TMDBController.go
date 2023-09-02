@@ -15,136 +15,54 @@ import (
     "strings"
     // "compress/gzip"
     // "time"
-
+    
     "github.com/gin-gonic/gin"
     // "github.com/go-playground/validator/v10"
     "go.mongodb.org/mongo-driver/bson"
     // "go.mongodb.org/mongo-driver/bson/primitive"
-    "go.mongodb.org/mongo-driver/mongo"
+    // "go.mongodb.org/mongo-driver/mongo"
     // "golang.org/x/crypto/bcrypt"
+    "github.com/mitchellh/mapstructure"
 )
 
-func genreHelper(genres []interface{}) []string {
+var config = &mapstructure.DecoderConfig{
+    TagName: "tmdb",
+}
+
+
+func genreHelper(json map[string]interface{}) []string {
     var out []string
-
-    for _, v := range genres {
-        re := v.(map[string]interface{})
-        out = append(out, re["name"].(string))
-    }
-
+    
+    if json["genres"] != nil {
+        genres := json["genres"].([]interface{})
+        for _, v := range genres {
+            re := v.(map[string]interface{})
+            out = append(out, re["name"].(string))
+        }
+    } 
+    
     return out
 }
 
-func movieDecoderTMDB(json map[string]interface{}) models.Movie {
-    movie := models.Movie{
-        Title:          json["title"].(string),
-        Description:    json["overview"].(string),
-        Date:           json["release_date"].(string),
-        Popularity:     json["popularity"].(float64),
-        VoteCount:      int(json["vote_count"].(float64)),
-        VoteRating:     json["vote_average"].(float64),
-        TMDB:           int(json["id"].(float64)),
-    }
+func extidHelper(json map[string]interface{}) map[string]string  {
+    out := make(map[string]string) 
+    
+    out["tmdb"] = strconv.Itoa(int(json["id"].(float64)))
 
-    if json["genres"] != nil {
-        movie.Genre = genreHelper(json["genres"].([]interface{}))
-    }
-    if json["homepage"] != nil {
-        movie.Info = json["homepage"].(string)
-    }
     if json["imdb_id"] != nil {
-        movie.IMDB = json["imdb_id"].(string)
-    }
-    if json["runtime"] != nil {
-        movie.Length = int(json["runtime"].(float64))
-    }
-    if json["budget"] != nil {
-        movie.Budget = int(json["budget"].(float64))
-    }
-    if json["poster_path"] != nil {
-        movie.Image = append(movie.Image, json["poster_path"].(string))
-    }
-
-    return movie
+        out["imdb"] = json["imdb_id"].(string)
+    } 
+    
+    return out
 }
 
-func personDecoderTMDB(json map[string]interface{}) models.Person {
-    person := models.Person{
-        Name: json["name"].(string),
-        Role: json["known_for_department"].(string),
-        Description: json["biography"].(string),
-        Popularity: json["popularity"].(float64),
-        TMDB: int(json["id"].(float64)),
-        IMDB: json["imdb_id"].(string),
-    }
+func decoder(json map[string]interface{}, obj interface{}) error {
+    config.Result = &obj
+    config.DecodeHook = mapstructure.StringToSliceHookFunc(",")
+    decoder, _ := mapstructure.NewDecoder(config)
+    err := decoder.Decode(json)
 
-    if json["profile_path"] != nil {
-        person.Image = append(person.Image, json["profile_path"].(string))
-    }
-    if json["birthday"] != nil {
-        person.Date = json["birthday"].(string)
-    }
-
-    return person
-}
-
-func showDecoderTMDB(json map[string]interface{}) models.Show {
-    show := models.Show{
-        Title:          json["name"].(string),
-        Description:    json["overview"].(string),
-        Date:           json["first_air_date"].(string),
-        Popularity:     json["popularity"].(float64),
-        VoteCount:      int(json["vote_count"].(float64)),
-        VoteRating:     json["vote_average"].(float64),
-        TMDB:           int(json["id"].(float64)),
-    }
-
-    if json["genres"] != nil {
-        show.Genre = genreHelper(json["genres"].([]interface{}))
-    }
-    if json["number_of_seasons"] != nil {
-        show.Seasons = int(json["number_of_seasons"].(float64))
-    }
-    if json["homepage"] != nil {
-        show.Info = json["homepage"].(string)
-    }
-    if json["poster_path"] != nil {
-        show.Image = append(show.Image, json["poster_path"].(string))
-    }
-
-    return show
-}
-
-func showSeasonDecoderTMDB(json map[string]interface{}) models.ShowSeason {
-    show := models.ShowSeason{
-        SeasonID:       int(json["season_number"].(float64)),
-        Episodes:       len(json["episodes"].([]interface{})),
-        Description:    json["overview"].(string),
-        Date:           json["air_date"].(string),
-    }
-
-    if json["poster_path"] != nil {
-        show.Image = json["poster_path"].(string)
-    }
-
-    return show
-}
-
-func showEpisodeDecoderTMDB(json map[string]interface{}) models.ShowEpisode {
-    show := models.ShowEpisode{
-        EpisodeID:      int(json["episode_number"].(float64)),
-        Title:          json["name"].(string),
-        Description:    json["overview"].(string),
-        Date:           json["air_date"].(string),
-        VoteCount:      int(json["vote_count"].(float64)),
-        VoteRating:     json["vote_average"].(float64),
-    }
-
-    if json["poster_path"] != nil {
-        show.Image = json["poster_path"].(string)
-    }
-
-    return show
+    return err
 }
 
 
@@ -206,9 +124,10 @@ func TMDBTest() gin.HandlerFunc {
 
 func TMDBSearch() gin.HandlerFunc {
     return func(c *gin.Context) {
-        var people []mongo.WriteModel
-        var movies []mongo.WriteModel
-        var shows  []mongo.WriteModel
+
+        var people []models.Person
+        var movies []models.Movie
+        var shows  []models.Show
 
         var err error
         query := strings.Replace(c.Query("q"), " ", "%20", -1)
@@ -228,17 +147,26 @@ func TMDBSearch() gin.HandlerFunc {
         for i := 0; i < length; i++ {
             result = json["results"].([]interface{})[i].(map[string]interface{})
 
+
             if result["media_type"] == "tv" {
-                show := showDecoderTMDB(result)
-                shows = append(shows, show.Write()) 
+                var show models.Show
+                decoder(result, &show) 
+                show.Genre = genreHelper(result)
+                show.ExternalIds = extidHelper(result)
+                shows = append(shows, show) 
             } else if result["media_type"] == "movie" {
-                movie := movieDecoderTMDB(result)
-                movies = append(movies, movie.Write()) 
+                var movie models.Movie
+                decoder(result, &movie)
+                movie.Genre = genreHelper(result)
+                movie.ExternalIds = extidHelper(result)
+                movies = append(movies, movie) 
             } else {
                 var jsonPerson map[string]interface{}
                 jsonPerson, err = getTMDB("person/" + strconv.Itoa(int(result["id"].(float64))) + "?language=en-US")
-                person := personDecoderTMDB(jsonPerson)
-                people = append(people, person.Write()) 
+                var person models.Person
+                decoder(jsonPerson, &person)
+                person.ExternalIds = extidHelper(jsonPerson)
+                people = append(people, person) 
             }
             if err != nil {
                 c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -254,25 +182,23 @@ func TMDBSearch() gin.HandlerFunc {
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         }
-
-
-
+        
         err = models.WriteShow(shows)
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         }
-
-
+        
+        
         c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
     }
 }
 
 func TMDBPopular() gin.HandlerFunc {
     return func(c *gin.Context) {
-        var people []mongo.WriteModel
-        var movies []mongo.WriteModel
-        var shows  []mongo.WriteModel
-
+        var people []models.Person
+        var movies []models.Movie
+        var shows  []models.Show
+        
         var err error
         json, err := getTMDB("trending/all/week?language=en-US")
         if err != nil {
@@ -290,17 +216,26 @@ func TMDBPopular() gin.HandlerFunc {
         for i := 0; i < length; i++ {
             result = json["results"].([]interface{})[i].(map[string]interface{})
 
+
             if result["media_type"] == "tv" {
-                show := showDecoderTMDB(result)
-                shows = append(shows, show.Write()) 
+                var show models.Show
+                decoder(result, &show) 
+                show.Genre = genreHelper(result)
+                show.ExternalIds = extidHelper(result)
+                shows = append(shows, show) 
             } else if result["media_type"] == "movie" {
-                movie := movieDecoderTMDB(result)
-                movies = append(movies, movie.Write()) 
+                var movie models.Movie
+                decoder(result, &movie)
+                movie.Genre = genreHelper(result)
+                movie.ExternalIds = extidHelper(result)
+                movies = append(movies, movie) 
             } else {
                 var jsonPerson map[string]interface{}
                 jsonPerson, err = getTMDB("person/" + strconv.Itoa(int(result["id"].(float64))) + "?language=en-US")
-                person := personDecoderTMDB(jsonPerson)
-                people = append(people, person.Write()) 
+                var person models.Person
+                decoder(jsonPerson, &person)
+                person.ExternalIds = extidHelper(jsonPerson)
+                people = append(people, person) 
             }
             if err != nil {
                 c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -311,14 +246,17 @@ func TMDBPopular() gin.HandlerFunc {
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         }
+ 
         err = models.WriteMovie(movies)
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         }
+
         err = models.WriteShow(shows)
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         }
+
 
         c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
     }
@@ -329,50 +267,12 @@ func TMDBMovieDetails() gin.HandlerFunc {
         query := strings.Replace(c.Param("movieId"), " ", "%20", -1)
         result, err := getTMDB("movie/" + query + "?append_to_response=recommendations&language=en-US")
         
-        movie := movieDecoderTMDB(result)
+        var movie models.Movie
+        decoder(result, &movie)
+        movie.Genre = genreHelper(result)
+        movie.ExternalIds = extidHelper(result)
         
-        
-        recommendations := result["recommendations"].(map[string]interface{})["results"].([]interface{})
-        var movies []mongo.WriteModel
-        var shows  []mongo.WriteModel
-        var movieRecs []int
-        var showRecs  []int
-
-        for i := 1; i < len(recommendations); i++ {
-            recommendation := recommendations[i].(map[string]interface{})
-            // fmt.Println(recommendation)
-            if recommendation["media_type"] == "tv" {
-                showRec := showDecoderTMDB(recommendation)
-                shows = append(shows, showRec.Write())
-                showRecs = append(showRecs, showRec.TMDB)
-            } else {
-                movieRec := movieDecoderTMDB(recommendation)
-                movies = append(movies, movieRec.Write())
-                movieRecs = append(movieRecs, movieRec.TMDB)
-            }
-        }
-
-        err = models.WriteMovie(movies)
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-        }
-        err = models.WriteShow(shows)
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-        }
-
-        movieRes, _ := models.FindMovie(bson.D{{"TMDB", bson.D{{"$in", movieRecs}}}})
-        showRes, _ := models.FindShow(bson.D{{"TMDB", bson.D{{"$in", showRecs}}}})
-
-        for i := 0; i < len(movieRes); i++ {
-            movie.AdjMovies = append(movie.AdjMovies, movieRes[i].Id)
-        }
-
-        for i := 0; i < len(showRes); i++ {
-            movie.AdjShows = append(movie.AdjShows, showRes[i].Id)
-        }
-        
-        err = models.WriteMovie([]mongo.WriteModel{movie.Write()})
+        err = models.WriteMovie([]models.Movie{movie})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         } else {
@@ -386,9 +286,11 @@ func TMDBPersonDetails() gin.HandlerFunc {
         query := strings.Replace(c.Param("personId"), " ", "%20", -1)
         json, err := getTMDB("person/" + query + "?language=en-US")
 
-        person := personDecoderTMDB(json)
+        var person models.Person
+        decoder(json, &person)
+        person.ExternalIds = extidHelper(json)
 
-        err = models.WritePerson([]mongo.WriteModel{person.Write()})
+        err = models.WritePerson([]models.Person{person})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         } else {
@@ -402,60 +304,22 @@ func TMDBShowDetails() gin.HandlerFunc {
         query := strings.Replace(c.Param("showId"), " ", "%20", -1)
         result, err := getTMDB("tv/" + query + "?append_to_response=recommendations&language=en-US")
 
-        show := showDecoderTMDB(result)
+        var show models.Show
+        decoder(result, &show) 
+        show.Genre = genreHelper(result)
+        show.ExternalIds = extidHelper(result)
 
-        recommendations := result["recommendations"].(map[string]interface{})["results"].([]interface{})
-        var movies []mongo.WriteModel
-        var shows  []mongo.WriteModel
-        var movieRecs []int
-        var showRecs  []int
-
-        for i := 1; i < len(recommendations); i++ {
-            recommendation := recommendations[i].(map[string]interface{})
-            // fmt.Println(recommendation)
-            if recommendation["media_type"] == "tv" {
-                showRec := showDecoderTMDB(recommendation)
-                shows = append(shows, showRec.Write())
-                showRecs = append(showRecs, showRec.TMDB)
-            } else {
-                movieRec := movieDecoderTMDB(recommendation)
-                movies = append(movies, movieRec.Write())
-                movieRecs = append(movieRecs, movieRec.TMDB)
-            }
-        }
-
-        err = models.WriteMovie(movies)
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-        }
-        err = models.WriteShow(shows)
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-        }
-
-        movieRes, _ := models.FindMovie(bson.D{{"TMDB", bson.D{{"$in", movieRecs}}}})
-        showRes, _ := models.FindShow(bson.D{{"TMDB", bson.D{{"$in", showRecs}}}})
-
-        for i := 0; i < len(movieRes); i++ {
-            show.AdjMovies = append(show.AdjMovies, movieRes[i].Id)
-        }
-
-        for i := 0; i < len(showRes); i++ {
-            show.AdjShows = append(show.AdjShows, showRes[i].Id)
-        }
-
-
-        err = models.WriteShow([]mongo.WriteModel{show.Write()})
+        err = models.WriteShow([]models.Show{show})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
         }
         
-        showsres, _ := models.FindShow(bson.D{{"TMDB", show.TMDB}})
+        showsres, _ := models.FindShow(bson.D{{"title", show.Title}, {"date", show.Date}})
         show = showsres[0]
 
-        var seasons  []mongo.WriteModel
-        var episodes []mongo.WriteModel
+        var seasons  []models.ShowSeason
+        var episodes []models.ShowEpisode
 
         for i := 1; i <= show.Seasons; i++ {
             seasonResult, err := getTMDB("tv/" + query + "/season/" + strconv.Itoa(i) + "?language=en-US")
@@ -463,19 +327,20 @@ func TMDBShowDetails() gin.HandlerFunc {
                 c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             }
 
-            season := showSeasonDecoderTMDB(seasonResult)
+            var season models.ShowSeason
+            decoder(seasonResult, &season) 
             season.ShowId = show.Id
 
-            seasons = append(seasons, season.Write()) 
-
+            seasons = append(seasons, season) 
             episodeResults := seasonResult["episodes"].([]interface{})
 
             for j := 0; j < len(episodeResults); j++ {
-                episode := showEpisodeDecoderTMDB(episodeResults[j].(map[string]interface{}))
+                var episode models.ShowEpisode
+                decoder(episodeResults[j].(map[string]interface{}), &episode) 
                 episode.ShowId = show.Id
                 episode.SeasonID = i
 
-                episodes = append(episodes, episode.Write()) 
+                episodes = append(episodes, episode) 
             }
         }
 
