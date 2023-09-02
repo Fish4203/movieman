@@ -246,12 +246,10 @@ func TMDBPopular() gin.HandlerFunc {
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         }
- 
         err = models.WriteMovie(movies)
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
         }
-
         err = models.WriteShow(shows)
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
@@ -265,7 +263,7 @@ func TMDBPopular() gin.HandlerFunc {
 func TMDBMovieDetails() gin.HandlerFunc {
     return func(c *gin.Context) {
         query := strings.Replace(c.Param("movieId"), " ", "%20", -1)
-        result, err := getTMDB("movie/" + query + "?append_to_response=recommendations&language=en-US")
+        result, err := getTMDB("movie/" + query + "?language=en-US")
         
         var movie models.Movie
         decoder(result, &movie)
@@ -284,11 +282,58 @@ func TMDBMovieDetails() gin.HandlerFunc {
 func TMDBPersonDetails() gin.HandlerFunc {
     return func(c *gin.Context) {
         query := strings.Replace(c.Param("personId"), " ", "%20", -1)
-        json, err := getTMDB("person/" + query + "?language=en-US")
+        json, err := getTMDB("person/" + query + "?append_to_response=combined_credits&language=en-US")
 
         var person models.Person
         decoder(json, &person)
         person.ExternalIds = extidHelper(json)
+
+
+        var movies []models.Movie
+        var shows  []models.Show
+        movieFilters := bson.A{}
+        showFilters  := bson.A{}
+
+        credits := json["combined_credits"].(map[string]interface{})["cast"].([]interface{})
+        credits = append(credits, json["combined_credits"].(map[string]interface{})["crew"].([]interface{})...)
+
+        for i := 0; i < len(credits); i++ {
+            result := credits[i].(map[string]interface{})
+
+            if result["media_type"] == "tv" {
+                var show models.Show
+                decoder(result, &show) 
+                show.Genre = genreHelper(result)
+                show.ExternalIds = extidHelper(result)
+                showFilters = append(showFilters, bson.M{"title": show.Title, "date": show.Date})
+                shows = append(shows, show) 
+            } else {
+                var movie models.Movie
+                decoder(result, &movie)
+                movie.Genre = genreHelper(result)
+                movie.ExternalIds = extidHelper(result)
+                movieFilters = append(movieFilters, bson.M{"title": movie.Title, "date": movie.Date})
+                movies = append(movies, movie) 
+            } 
+        }
+        
+        err = models.WriteMovie(movies)
+        movies, err = models.FindMovie(bson.D{{"$or", movieFilters}})
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+        err = models.WriteShow(shows)
+        shows, err = models.FindShow(bson.D{{"$or", showFilters}})
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+        }
+
+        for i := 0; i < len(movies); i++ {
+            person.Movies = append(person.Movies, movies[i].Id)
+        }
+        for i := 0; i < len(shows); i++ {
+            person.Shows = append(person.Shows, shows[i].Id)
+        }
 
         err = models.WritePerson([]models.Person{person})
         if err != nil {
