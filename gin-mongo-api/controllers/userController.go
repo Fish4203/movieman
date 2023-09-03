@@ -1,13 +1,14 @@
 package controllers
 
 import (
-    "context"
+    // "context"
     // "gin-mongo-api/configs"
     "gin-mongo-api/models"
     // "gin-mongo-api/responses"
     "gin-mongo-api/middleware"
     "net/http"
-    "time"
+    // "time"
+    // "fmt"
 
     "github.com/gin-gonic/gin"
     "github.com/go-playground/validator/v10"
@@ -22,9 +23,8 @@ var validate = validator.New()
 
 func CreateUser() gin.HandlerFunc {
     return func(c *gin.Context) {
-        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
         var user models.User
-        defer cancel()
+        var err error
 
         //validate the request body
         if err := c.BindJSON(&user); err != nil {
@@ -38,27 +38,30 @@ func CreateUser() gin.HandlerFunc {
             return
         }
 
-        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password),bcrypt.DefaultCost)
+        res, _ := models.FindUser(bson.D{{"name", user.Name}})
+        if len(res) != 0 {
+            c.JSON(http.StatusBadRequest, map[string]interface{}{"error": "User already exists"})
+            return
+        }
+
+        password, err := bcrypt.GenerateFromPassword([]byte(user.Password),bcrypt.DefaultCost)
         if err != nil {
             c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
             return
         }
+        user.Password = string(password)
 
-        newUser := models.User{
-            Id:       primitive.NewObjectID(),
-            Name:     user.Name,
-            Password: string(hashedPassword),
-            Role:     user.Role,
-        }
-
-        result, err := models.UserCollection.InsertOne(ctx, newUser)
+        err = models.WriteUser([]models.User{user})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
         }
 
+        res, _ = models.FindUser(bson.D{{"name", user.Name}})
+        user = res[0]
+        
         user.Password = ""
-        c.JSON(http.StatusCreated, map[string]interface{}{"data": result})
+        c.JSON(http.StatusCreated, map[string]interface{}{"user": user})
     }
 }
 
@@ -66,18 +69,19 @@ func CreateUser() gin.HandlerFunc {
 
 func GetAUser() gin.HandlerFunc {
     return func(c *gin.Context) {
-        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-        userId := c.Param("userId")
-        var user models.User
-        defer cancel()
+        userName := c.Param("userId")
 
-        objId, _ := primitive.ObjectIDFromHex(userId)
-        err := models.UserCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&user)
+        res, err := models.FindUser(bson.D{{"name", userName}})
         if err != nil {
             c.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
             return
         }
-
+        if len(res) == 0 {
+            c.JSON(http.StatusNotFound, map[string]interface{}{"error": "cant find user"})
+            return
+        }
+        
+        user := res[0]
         user.Password = ""
         c.JSON(http.StatusOK, map[string]interface{}{"user": user})
     }
@@ -86,9 +90,7 @@ func GetAUser() gin.HandlerFunc {
 
 func EditAUser() gin.HandlerFunc {
     return func(c *gin.Context) {
-        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
         var user models.User
-        defer cancel()
 
         //validate the request body
         if err := c.BindJSON(&user); err != nil {
@@ -108,43 +110,36 @@ func EditAUser() gin.HandlerFunc {
         }
 
         objId, _ := primitive.ObjectIDFromHex(userId)
-
-        hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password),bcrypt.DefaultCost)
+        
+        passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password),bcrypt.DefaultCost)
         if err != nil {
             c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
             return
         }
 
-        update := bson.M{"name": user.Name, "password": string(hashedPassword), "role": user.Role}
-        result, err := models.UserCollection.UpdateOne(ctx, bson.M{"_id": objId}, bson.M{"$set": update})
+        user.Password = string(passwordHash)
+        
+        res, _ := models.FindUser(bson.D{{"_id", objId}})
+        if len(res) == 0 || res[0].Name != user.Name {
+            c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Username Mismatch"})
+            return
+        }
+        
+        err = models.WriteUser([]models.User{user})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
         }
 
-        //get updated user details
-        var updatedUser models.User
-        if result.MatchedCount != 1 {
-            c.JSON(http.StatusNotFound, map[string]interface{}{"error": "User not found"})
-            return
-        }
-
-        err = models.UserCollection.FindOne(ctx, bson.M{"_id": objId}).Decode(&updatedUser)
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-            return
-        }
-
-        updatedUser.Password = ""
-        c.JSON(http.StatusOK, map[string]interface{}{"user": updatedUser})
+        user.Id = res[0].Id
+        user.Password = ""
+        c.JSON(http.StatusOK, map[string]interface{}{"user": user})
     }
 }
 
 
 func DeleteAUser() gin.HandlerFunc {
     return func(c *gin.Context) {
-        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-        defer cancel()
 
         userId := c.MustGet("userId").(string)
         if userId == "" {
@@ -154,14 +149,9 @@ func DeleteAUser() gin.HandlerFunc {
 
         objId, _ := primitive.ObjectIDFromHex(userId)
 
-        result, err := models.UserCollection.DeleteOne(ctx, bson.M{"_id": objId})
+        err := models.DeleteUser(bson.D{{"_id", objId}})
         if err != nil {
             c.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
-            return
-        }
-
-        if result.DeletedCount < 1 {
-            c.JSON(http.StatusNotFound, map[string]interface{}{"error": "User not found"})
             return
         }
 
@@ -171,27 +161,14 @@ func DeleteAUser() gin.HandlerFunc {
 
 func GetAllUsers() gin.HandlerFunc {
     return func(c *gin.Context) {
-        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-        var users []models.User
-        defer cancel()
-
-        results, err := models.UserCollection.Find(ctx, bson.M{})
-
+        users, err := models.FindUser(bson.D{})
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
         }
 
-        //reading from the db in an optimal way
-        defer results.Close(ctx)
-        for results.Next(ctx) {
-            var singleUser models.User
-            if err = results.Decode(&singleUser); err != nil {
-                c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-            }
-
-            singleUser.Password = ""
-            users = append(users, singleUser)
+        for i := 0; i < len(users); i++ {
+            users[i].Password = ""
         }
 
         c.JSON(http.StatusOK, map[string]interface{}{"users": users})
@@ -201,9 +178,7 @@ func GetAllUsers() gin.HandlerFunc {
 
 func Login() gin.HandlerFunc {
     return func(c *gin.Context) {
-        ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
         var user models.User
-        defer cancel()
 
         //validate the request body
         if err := c.BindJSON(&user); err != nil {
@@ -217,21 +192,19 @@ func Login() gin.HandlerFunc {
             return
         }
 
-        password := user.Password
-
-        err := models.UserCollection.FindOne(ctx, bson.M{"name": user.Name}).Decode(&user)
+        res, err := models.FindUser(bson.D{{"name", user.Name}})
         if err != nil {
             c.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
             return
         }
 
 
-        if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+        if err := bcrypt.CompareHashAndPassword([]byte(res[0].Password), []byte(user.Password)); err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
         }
 
-        token, err := middleware.GenerateToken(user.Id.Hex())
+        token, err := middleware.GenerateToken(res[0].Id.Hex())
         if  err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
