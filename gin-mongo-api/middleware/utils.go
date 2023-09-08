@@ -9,7 +9,7 @@ import (
 
 
 func JsonRequest(url string, header string) (map[string]interface{}, error) {
-    var jsonResponse map[string]interface{}
+    var jsonResponse = make(map[string]interface{})
 
     req, err := http.NewRequest("GET", url, nil)
     if err != nil {
@@ -41,6 +41,12 @@ func JsonRequest(url string, header string) (map[string]interface{}, error) {
 
     err = json.Unmarshal(body, &jsonResponse)
     if err != nil {
+        var jsonList []interface{}
+        err = json.Unmarshal(body, &jsonList)
+        if err != nil {
+            return jsonResponse, err
+        }
+        jsonResponse["results"] = jsonList
         return jsonResponse, err
     }
 

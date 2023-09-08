@@ -19,6 +19,7 @@ func main() {
         routes.UserRoute(router)
         routes.TMDBRoute(router)
         routes.GetMediaRoute(router)
+        routes.IndexerRoute(router)
 
         router.Run("localhost:4000")
 }

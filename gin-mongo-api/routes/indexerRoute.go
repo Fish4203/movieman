@@ -5,8 +5,8 @@ import (
     "github.com/gin-gonic/gin"
 )
 
-func IndexRoute(router *gin.Engine)  {
-    router.GET("/index", 		controllers.IndexTest())
-    router.GET("/index/search", controllers.IndexSearch())
+func IndexerRoute(router *gin.Engine)  {
+    router.GET("/indexer", 		controllers.IndexerTest())
+    router.GET("/indexer/search", controllers.IndexerSearch())
     // router.GET("/indexrs", 		controllers.IndexList())
 }
