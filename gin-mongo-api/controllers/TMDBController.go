@@ -5,12 +5,12 @@ import (
     // "gin-mongo-api/configs"
     "gin-mongo-api/models"
     // "gin-mongo-api/responses"
-    // "gin-mongo-api/middleware"
+    "gin-mongo-api/middleware"
     "fmt"
     "strconv"
 	"net/http"
-	"io"
-    "encoding/json"
+	// "io"
+    // "encoding/json"
     "os"
     "strings"
     // "compress/gzip"
@@ -66,52 +66,11 @@ func decoder(json map[string]interface{}, obj interface{}) error {
 }
 
 
-func getTMDB(params string) (map[string]interface{}, error) {
-    var jsonResponse map[string]interface{}
-
-    url := "https://api.themoviedb.org/3/" + params
-    // fmt.Println(url
-    req, err := http.NewRequest("GET", url, nil)
-    if err != nil {
-        return jsonResponse, err
-    }
-
-    // req.Header.Add("Accept-Encoding", "gzip, deflate, br")
-    req.Header.Add("accept", "application/json")
-	req.Header.Add("Authorization", "Bearer " + os.Getenv("TMDB"))
-
-
-    res, err := http.DefaultClient.Do(req)
-    if err != nil {
-        return jsonResponse, err
-    }
-
-
-    // reader, err := gzip.NewReader(res.Body)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// defer reader.Close()
-
-    defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
-    if err != nil {
-        return jsonResponse, err
-    }
-
-    err = json.Unmarshal(body, &jsonResponse)
-    if err != nil {
-        return jsonResponse, err
-    }
-
-    return jsonResponse, nil
-}
-
 func TMDBTest() gin.HandlerFunc {
     return func(c *gin.Context) {
         fmt.Println("TMDB controler")
 
-        json, err := getTMDB("authentication")
+        json, err := middleware.JsonRequest("https://api.themoviedb.org/3/authentication", "Bearer " + os.Getenv("TMDB"))
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
@@ -131,7 +90,7 @@ func TMDBSearch() gin.HandlerFunc {
 
         var err error
         query := strings.Replace(c.Query("q"), " ", "%20", -1)
-        json, err := getTMDB("search/multi?query=" + query + "&include_adult=false&language=en-US&page=1")
+        json, err := middleware.JsonRequest("https://api.themoviedb.org/3/search/multi?query=" + query + "&include_adult=false&language=en-US&page=1", "Bearer " + os.Getenv("TMDB"))
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
@@ -162,7 +121,7 @@ func TMDBSearch() gin.HandlerFunc {
                 movies = append(movies, movie) 
             } else {
                 var jsonPerson map[string]interface{}
-                jsonPerson, err = getTMDB("person/" + strconv.Itoa(int(result["id"].(float64))) + "?language=en-US")
+                jsonPerson, _ = middleware.JsonRequest("https://api.themoviedb.org/3/person/" + strconv.Itoa(int(result["id"].(float64))) + "?language=en-US", "Bearer " + os.Getenv("TMDB"))
                 var person models.Person
                 decoder(jsonPerson, &person)
                 person.ExternalIds = extidHelper(jsonPerson)
@@ -200,7 +159,7 @@ func TMDBPopular() gin.HandlerFunc {
         var shows  []models.Show
         
         var err error
-        json, err := getTMDB("trending/all/week?language=en-US")
+        json, err := middleware.JsonRequest("https://api.themoviedb.org/3/trending/all/week?language=en-US", "Bearer " + os.Getenv("TMDB"))
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
@@ -231,7 +190,7 @@ func TMDBPopular() gin.HandlerFunc {
                 movies = append(movies, movie) 
             } else {
                 var jsonPerson map[string]interface{}
-                jsonPerson, err = getTMDB("person/" + strconv.Itoa(int(result["id"].(float64))) + "?language=en-US")
+                jsonPerson, _ = middleware.JsonRequest("https://api.themoviedb.org/3/person/" + strconv.Itoa(int(result["id"].(float64))) + "?language=en-US", "Bearer " + os.Getenv("TMDB"))
                 var person models.Person
                 decoder(jsonPerson, &person)
                 person.ExternalIds = extidHelper(jsonPerson)
@@ -263,7 +222,7 @@ func TMDBPopular() gin.HandlerFunc {
 func TMDBMovieDetails() gin.HandlerFunc {
     return func(c *gin.Context) {
         query := strings.Replace(c.Param("movieId"), " ", "%20", -1)
-        result, err := getTMDB("movie/" + query + "?language=en-US")
+        result, err := middleware.JsonRequest("https://api.themoviedb.org/3/movie/" + query + "?language=en-US", "Bearer " + os.Getenv("TMDB"))
         
         var movie models.Movie
         decoder(result, &movie)
@@ -282,7 +241,7 @@ func TMDBMovieDetails() gin.HandlerFunc {
 func TMDBPersonDetails() gin.HandlerFunc {
     return func(c *gin.Context) {
         query := strings.Replace(c.Param("personId"), " ", "%20", -1)
-        json, err := getTMDB("person/" + query + "?append_to_response=combined_credits&language=en-US")
+        json, err := middleware.JsonRequest("https://api.themoviedb.org/3/person/" + query + "?append_to_response=combined_credits&language=en-US", "Bearer " + os.Getenv("TMDB"))
 
         var person models.Person
         decoder(json, &person)
@@ -347,7 +306,7 @@ func TMDBPersonDetails() gin.HandlerFunc {
 func TMDBShowDetails() gin.HandlerFunc {
     return func(c *gin.Context) {
         query := strings.Replace(c.Param("showId"), " ", "%20", -1)
-        result, err := getTMDB("tv/" + query + "?append_to_response=recommendations&language=en-US")
+        result, err := middleware.JsonRequest("https://api.themoviedb.org/3/tv/" + query + "?append_to_response=recommendations&language=en-US", "Bearer " + os.Getenv("TMDB"))
 
         var show models.Show
         decoder(result, &show) 
@@ -367,7 +326,7 @@ func TMDBShowDetails() gin.HandlerFunc {
         var episodes []models.ShowEpisode
 
         for i := 1; i <= show.Seasons; i++ {
-            seasonResult, err := getTMDB("tv/" + query + "/season/" + strconv.Itoa(i) + "?language=en-US")
+            seasonResult, err := middleware.JsonRequest("https://api.themoviedb.org/3/tv/" + query + "/season/" + strconv.Itoa(i) + "?language=en-US", "Bearer " + os.Getenv("TMDB"))
             if err != nil {
                 c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             }

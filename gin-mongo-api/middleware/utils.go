@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"io"
     "encoding/json"
-    "os"
+    // "os"
 )
 
 
-func JsonRequest(url string) (map[string]interface{}, error) {
+func JsonRequest(url string, header string) (map[string]interface{}, error) {
     var jsonResponse map[string]interface{}
 
     req, err := http.NewRequest("GET", url, nil)
@@ -18,7 +18,7 @@ func JsonRequest(url string) (map[string]interface{}, error) {
 
     // req.Header.Add("Accept-Encoding", "gzip, deflate, br")
     req.Header.Add("accept", "application/json")
-	req.Header.Add("Authorization", "Bearer " + os.Getenv("TMDB"))
+	req.Header.Add("Authorization", header)
 
 
     res, err := http.DefaultClient.Do(req)
