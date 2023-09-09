@@ -7,12 +7,13 @@ import (
     "gin-mongo-api/responses"
     "gin-mongo-api/middleware"
     "fmt"
-    // "strconv"
+    "strconv"
 	"net/http"
 	// "io"
     // "encoding/json"
     "os"
     "strings"
+    "regexp"
     // "compress/gzip"
     // "time"
     
@@ -59,9 +60,19 @@ func IndexerSearch() gin.HandlerFunc {
     return func(c *gin.Context) {
         var torrents []responses.IndexerResponse
 
+        seasonRegex := regexp.MustCompile(`S[0-9][0-9]`)
+        episodeRegex := regexp.MustCompile(`E[0-9][0-9]`)
+        encodingRegex := regexp.MustCompile(`((H|h|x)26(4|5)|AV1)`)
+        resolutionRegex := regexp.MustCompile(`[0-9]+p`)
+        movieRegex := regexp.MustCompile(`20[0-9][0-9]`)
+        showRegex := regexp.MustCompile(`50[0-9][0-9]`)
+        gameRegex := regexp.MustCompile(`(40[0-9][0-9]|10[0-9][0-9])`)
+        bookRegex := regexp.MustCompile(`70[0-9][0-9]`)
+
+
         var err error
         query := strings.Replace(c.Query("q"), " ", "%20", -1)
-        json, err := middleware.JsonRequest(os.Getenv("INDEXERIP") + "/api/v1/search?q=" + query, os.Getenv("INDEXERKEY"))
+        json, err := middleware.JsonRequest(os.Getenv("INDEXERIP") + "/api/v1/search?query=" + query, os.Getenv("INDEXERKEY"))
         if err != nil {
             c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             return
@@ -81,6 +92,25 @@ func IndexerSearch() gin.HandlerFunc {
                 c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             }
 
+
+            res.SeasonNum   = seasonRegex.FindString(res.Title)
+            res.EpisodeNum  = episodeRegex.FindString(res.Title)
+            res.Encoding    = encodingRegex.FindString(res.Title)
+            res.Resolution  = resolutionRegex.FindString(res.Title)
+
+            catagory := strconv.Itoa(int(result["categories"].([]interface{})[0].(map[string]interface{})["id"].(float64))) 
+
+            if movieRegex.MatchString(catagory) {
+                res.Catagory = "Movie"
+            } else if showRegex.MatchString(catagory) {
+                res.Catagory = "Show"
+            } else if gameRegex.MatchString(catagory) {
+                res.Catagory = "Game"
+            } else if bookRegex.MatchString(catagory) {
+                res.Catagory = "Book"
+            } else {
+                res.Catagory = "Other"
+            }
 
             torrents = append(torrents, res)
         }
