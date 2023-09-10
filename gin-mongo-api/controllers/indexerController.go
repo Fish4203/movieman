@@ -31,7 +31,7 @@ var configIndex = &mapstructure.DecoderConfig{
 }
 
 
-func decoderIndex(json map[string]interface{}, obj interface{}) error {
+func decoderJson(json map[string]interface{}, obj interface{}) error {
     configIndex.Result = &obj
     // configIndex.DecodeHook = mapstructure.StringToSliceHookFunc(",")
     decoder, _ := mapstructure.NewDecoder(configIndex)
@@ -60,6 +60,7 @@ func IndexerSearch() gin.HandlerFunc {
     return func(c *gin.Context) {
         var torrents []responses.IndexerResponse
 
+        yearRegex := regexp.MustCompile(`(19|20)[0-9][0-9]`)
         seasonRegex := regexp.MustCompile(`S[0-9][0-9]`)
         episodeRegex := regexp.MustCompile(`E[0-9][0-9]`)
         encodingRegex := regexp.MustCompile(`((H|h|x)26(4|5)|AV1)`)
@@ -87,12 +88,13 @@ func IndexerSearch() gin.HandlerFunc {
             result = results[i].(map[string]interface{})
 
             var res responses.IndexerResponse
-            err := decoderIndex(result, &res)
+            err := decoderJson(result, &res)
             if err != nil {
                 c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
             }
 
 
+            res.ReleaseYear, _ = strconv.Atoi(yearRegex.FindString(res.Title))
             res.SeasonNum   = seasonRegex.FindString(res.Title)
             res.EpisodeNum  = episodeRegex.FindString(res.Title)
             res.Encoding    = encodingRegex.FindString(res.Title)
