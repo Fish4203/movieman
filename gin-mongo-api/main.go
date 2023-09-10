@@ -20,6 +20,7 @@ func main() {
         routes.TMDBRoute(router)
         routes.GetMediaRoute(router)
         routes.IndexerRoute(router)
+        routes.QbtRoute(router)
 
         router.Run("localhost:4000")
 }
