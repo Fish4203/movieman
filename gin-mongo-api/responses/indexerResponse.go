@@ -2,12 +2,12 @@ package responses
 
 type IndexerResponse struct {
     // basic info 
-    Title       string                 `json:"title"`
-    Size        float64                `json:"size"`
+    Title       string                 `json:"title"                    validate:"required"`
+    Size        float64                `json:"size"                     validate:"required"`
     Info        string                 `json:"infourl"`
     Date        string                 `json:"publishDate"`
     ReleaseYear int                    `json:"releaseYear"` 
-    Catagory    string                 `json:"catagory"`
+    Catagory    string                 `json:"catagory"                 validate:"required"`
 
 
     // torrentinfo 

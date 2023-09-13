@@ -103,15 +103,15 @@ func IndexerSearch() gin.HandlerFunc {
             catagory := strconv.Itoa(int(result["categories"].([]interface{})[0].(map[string]interface{})["id"].(float64))) 
 
             if movieRegex.MatchString(catagory) {
-                res.Catagory = "Movie"
+                res.Catagory = "movie"
             } else if showRegex.MatchString(catagory) {
-                res.Catagory = "Show"
+                res.Catagory = "show"
             } else if gameRegex.MatchString(catagory) {
-                res.Catagory = "Game"
+                res.Catagory = "game"
             } else if bookRegex.MatchString(catagory) {
-                res.Catagory = "Book"
+                res.Catagory = "book"
             } else {
-                res.Catagory = "Other"
+                res.Catagory = "other"
             }
 
             torrents = append(torrents, res)

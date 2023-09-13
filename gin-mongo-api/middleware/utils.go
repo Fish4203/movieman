@@ -5,6 +5,7 @@ import (
 	"io"
     "encoding/json"
     // "os"
+    // "fmt"
 )
 
 
@@ -25,7 +26,7 @@ func JsonRequest(url string, header string) (map[string]interface{}, error) {
     if err != nil {
         return jsonResponse, err
     }
-
+    // fmt.Println(res.Status)
 
     // reader, err := gzip.NewReader(res.Body)
 	// if err != nil {
