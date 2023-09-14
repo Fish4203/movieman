@@ -15,7 +15,8 @@ type Watch struct {
     Book        primitive.ObjectID `json:"gook,omitempty"       bson:"gook,omitempty"`
     Game        primitive.ObjectID `json:"game,omitempty"       bson:"game,omitempty"`
     User        primitive.ObjectID `json:"user,omitempty"       bson:"user,omitempty"       validate:"required"`
-    Watched     uint               `json:"watched,omitempty"    bson:"watched,omitempty"    validate:"required"`
+    Title       string             `json:"title,omitempty"      bson:"title,omitempty"      validate:"required"`
+    Watched     int                `json:"watched,omitempty"    bson:"watched,omitempty"    validate:"required"`
     UserRating  float64            `json:"userRating,omitempty" bson:"userRating,omitempty"`
     Notes       string             `json:"notes,omitempty"      bson:"notes,omitempty"`
 }
@@ -46,6 +47,24 @@ func WriteWatch(models []Watch) error {
 	
     _, err := watchCollection.BulkWrite(ctx, writeObjs)
 
+    return err
+}
+
+func DeleteWatch(ids []string) error {
+    if len(ids) == 0 {
+        return nil
+    }
+    
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    var idobjs bson.A
+
+    for i := 0; i < len(ids); i++ {
+        idobj, _ := primitive.ObjectIDFromHex(ids[i])
+        idobjs = append(idobjs, bson.M{"_id": idobj})
+    }
+
+    _, err := watchCollection.DeleteMany(ctx, bson.D{{"$or", idobjs}})
     return err
 }
 
