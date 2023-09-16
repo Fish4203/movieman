@@ -6,9 +6,9 @@ import (
 )
 
 func QbtRoute(router *gin.Engine)  {
-    router.GET("/qbt", 			controllers.QbtGetAll())
-    router.POST("/qbt", 		controllers.QbtAdd())
-    router.GET("/qbt/:name",	controllers.QbtGet())
-    router.PUT("/qbt/:name/:category",	controllers.QbtEdit())
-    router.DELETE("/qbt/:name",	controllers.QbtDelete())
+    router.   GET("/qbt", 			     controllers.QbtGetAll())
+    router.  POST("/qbt", 		         controllers.QbtAdd())
+    router.   GET("/qbt/:name",	         controllers.QbtGet())
+    router.   PUT("/qbt/:name/:category",controllers.QbtEdit())
+    router.DELETE("/qbt/:name",	         controllers.QbtDelete())
 }

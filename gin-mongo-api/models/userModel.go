@@ -1,6 +1,7 @@
 package models
 
 import (
+    "fmt"
     "time"
     "context"
     "gin-mongo-api/configs"
@@ -43,6 +44,30 @@ func WriteUser(models []User) error {
     return err
 }
 
+func DeleteUser(ids []string) error {
+    if len(ids) == 0 {
+        return nil
+    }
+    
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    var idobjs bson.A
+
+    for i := 0; i < len(ids); i++ {
+        idobj, _ := primitive.ObjectIDFromHex(ids[i])
+        idobjs = append(idobjs, bson.M{"_id": idobj})
+    }
+
+    res, err := userCollection.DeleteMany(ctx, bson.D{{"$or", idobjs}})
+    if (err != nil) {
+        return err
+    }
+    if (res.DeletedCount == 0) {
+        return fmt.Errorf("Didnt find anything to delete")
+    }
+    return nil
+}
+
 
 func FindUser(filter bson.D) ([]User, error) {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -65,14 +90,4 @@ func FindUser(filter bson.D) ([]User, error) {
     }
 
     return users, nil
-}
-
-
-func DeleteUser(filter bson.D) error {
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
-
-    _, err := userCollection.DeleteMany(ctx, filter)
-
-    return err
 }

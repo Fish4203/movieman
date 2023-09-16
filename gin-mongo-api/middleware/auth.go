@@ -56,7 +56,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		})
 		if err == nil {
 			claims, ok := token.Claims.(jwt.MapClaims)
-			fmt.Println(claims)
+			// fmt.Println(claims)
 			if ok && token.Valid {
 				uid, exists := claims["user_id"].(string)
 				if exists {

@@ -140,16 +140,13 @@ func EditAUser() gin.HandlerFunc {
 
 func DeleteAUser() gin.HandlerFunc {
     return func(c *gin.Context) {
-
         userId := c.MustGet("userId").(string)
         if userId == "" {
             c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt or no jwt sent"})
             return
         }
 
-        objId, _ := primitive.ObjectIDFromHex(userId)
-
-        err := models.DeleteUser(bson.D{{"_id", objId}})
+        err := models.DeleteUser([]string{userId})
         if err != nil {
             c.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
             return
