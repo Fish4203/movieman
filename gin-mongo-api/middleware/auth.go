@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"net/http"
+
 
 	"github.com/gin-gonic/gin"
 	jwt "github.com/golang-jwt/jwt/v5"
@@ -61,9 +63,18 @@ func AuthMiddleware() gin.HandlerFunc {
 				uid, exists := claims["user_id"].(string)
 				if exists {
 					c.Set("userId", uid)
+					c.Next()
+				} else {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find userid in jwt"})
+					return
 				}
+			} else {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt"})
+				return
 			}
+		} else {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt or no jwt sent"})
+			return
 		}
-		c.Next()
 	}
 }

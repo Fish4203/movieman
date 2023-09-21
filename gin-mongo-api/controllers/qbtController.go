@@ -6,7 +6,7 @@ import (
     // "gin-mongo-api/models"
     "gin-mongo-api/responses"
     "gin-mongo-api/middleware"
-    // "fmt"
+    "fmt"
     // "strconv"
 	"net/http"
     "net/url"
@@ -64,6 +64,7 @@ func QbtGetAll() gin.HandlerFunc {
 func QbtAdd() gin.HandlerFunc {
     return func(c *gin.Context) {
         var torrent responses.IndexerResponse
+        fmt.Println("tree")
 
         if err := c.BindJSON(&torrent); err != nil {
             c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})

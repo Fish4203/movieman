@@ -7,11 +7,11 @@ import (
 
 func GetMediaRoute(router *gin.Engine)  {
     //detailes
-    router.GET("/media/details/movie/:movieId", controllers.MovieDetails())
-    router.GET("/media/details/show/:showId/:seasonId/:epesodeId", controllers.ShowEpisodeDetails())
-    router.GET("/media/details/show/:showId/:seasonId", controllers.ShowSeasonDetails())
-    router.GET("/media/details/show/:showId", controllers.ShowDetails())
-    router.GET("/media/details/person/:personId", controllers.PersonDetails())
+    router.GET("/media/movie/:movieId", controllers.MovieDetails())
+    router.GET("/media/show/:showId/:seasonId/:episodeId", controllers.ShowEpisodeDetails())
+    router.GET("/media/show/:showId/:seasonId", controllers.ShowSeasonDetails())
+    router.GET("/media/show/:showId", controllers.ShowDetails())
+    router.GET("/media/person/:personId", controllers.PersonDetails())
     // serch
     router.GET("/media/search", controllers.GetMediaSearch())
 }

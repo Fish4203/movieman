@@ -2,7 +2,7 @@ package main
 
 import (
     "gin-mongo-api/configs"
-    "gin-mongo-api/middleware"
+    // "gin-mongo-api/middleware"
     "gin-mongo-api/routes"
     "github.com/gin-gonic/gin"
     "github.com/gin-contrib/cors"
@@ -13,7 +13,7 @@ func main() {
 
         configs.InitClient()
 
-        router.Use(middleware.AuthMiddleware())
+        // router.Use(middleware.AuthMiddleware())
         router.Use(cors.Default())
 
         routes.UserRoute(router)
@@ -21,6 +21,7 @@ func main() {
         routes.GetMediaRoute(router)
         routes.IndexerRoute(router)
         routes.QbtRoute(router)
+        routes.WatchRoute(router)
 
         router.Run("localhost:4000")
 }

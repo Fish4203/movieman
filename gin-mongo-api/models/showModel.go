@@ -35,7 +35,7 @@ type ShowSeason struct {
     ShowId      primitive.ObjectID      `json:"showId,omitempty"       bson:"showId,omitempty"                              validate:"required"`
     SeasonID    int                     `json:"seasonId,omitempty"     bson:"seasonId,omitempty"    tmdb:"season_number"    validate:"required"`
     // basic info 
-    Episodes    int                     `json:"epesodes,omitempty"     bson:"epesodes,omitempty"    tmdb:"episodes"         validate:"required"`
+    Episodes    int                     `json:"episodes,omitempty"     bson:"episodes,omitempty"    tmdb:"episodes"         validate:"required"`
     Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview"         validate:"required"`
     Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"air_date"         validate:"required"`
     // external media 
@@ -47,7 +47,7 @@ type ShowEpisode struct {
     // ids
     ShowId      primitive.ObjectID      `json:"showId,omitempty"       bson:"showId,omitempty"                              validate:"required"`
     SeasonID    int                     `json:"seasonId,omitempty"     bson:"seasonId,omitempty"                            validate:"required"`
-    EpisodeID   int                     `json:"epesodeId,omitempty"    bson:"epesodeId,omitempty"   tmdb:"episode_number"   validate:"required"`
+    EpisodeID   int                     `json:"episodeId,omitempty"    bson:"episodeId,omitempty"   tmdb:"episode_number"   validate:"required"`
     // basic info 
     Title       string                  `json:"title,omitempty"        bson:"title,omitempty"       tmdb:"name"             validate:"required"`
     Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview"         validate:"required"`
@@ -117,7 +117,7 @@ func WriteShowEpisode(models []ShowEpisode) error {
     var writeObjs []mongo.WriteModel 
 	for i := 0; i < len(models); i++ {
         updateModel := mongo.NewUpdateOneModel()
-        updateModel.SetFilter(bson.M{"seasonId": models[i].SeasonID, "showId": models[i].ShowId, "epesodeId": models[i].EpisodeID}) 
+        updateModel.SetFilter(bson.M{"seasonId": models[i].SeasonID, "showId": models[i].ShowId, "episodeId": models[i].EpisodeID}) 
         updateModel.SetUpdate(bson.D{{"$set", models[i]}})
         updateModel.SetUpsert(true)
 

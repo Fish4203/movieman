@@ -8,9 +8,9 @@ import (
 func TMDBRoute(router *gin.Engine)  {
     router.GET("/TMDB", controllers.TMDBTest())
     //detailes
-    router.GET("/TMDB/details/movie/:movieId", controllers.TMDBMovieDetails())
-    router.GET("/TMDB/details/show/:showId", controllers.TMDBShowDetails())
-    router.GET("/TMDB/details/person/:personId", controllers.TMDBPersonDetails())
+    router.GET("/TMDB/movie/:movieId", controllers.TMDBMovieDetails())
+    router.GET("/TMDB/show/:showId", controllers.TMDBShowDetails())
+    router.GET("/TMDB/person/:personId", controllers.TMDBPersonDetails())
     // serch
     router.GET("/TMDB/search", controllers.TMDBSearch())
     router.GET("/TMDB/popluar", controllers.TMDBPopular())
