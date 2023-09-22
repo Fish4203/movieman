@@ -4,7 +4,7 @@ import { Button, Container, Card, Row, Col, Stack } from 'react-bootstrap';
 
 function Movie({movies}) {
     if (movies == null) {
-        return (<></>);
+        return (<><h2>Movies</h2></>);
     } 
     return (
         <><h2>Movies</h2><Row>
@@ -26,7 +26,7 @@ function Movie({movies}) {
 
 function People({people}) {
     if (people == null) {
-        return (<></>);
+        return (<><h2>People</h2></>);
     } 
     return (
         <><h2>People</h2><Row>
@@ -46,13 +46,13 @@ function People({people}) {
     );
 }
 
-function Show({shows}) {
+function Show({shows, lim}) {
     if (shows == null) {
-        return (<></>);
+        return (<><h2>Shows</h2></>);
     } 
     return (
         <><h2>Shows</h2><Row>
-            {shows.map(post => (
+            {shows.slice(0, lim).map(post => (
                 <Card className='m-2' style={{ width: '18rem' }}>
                     <Card.Img variant="top" src="https://placehold.co/200x100" />
                     <Card.Body>
@@ -70,7 +70,7 @@ function Show({shows}) {
 
 function Episode({episodes}) {
     if (episodes == null) {
-        return (<></>);
+        return (<><h2>Episodes</h2></>);
     } 
     return (
         <><h2>Episodes</h2><Row>

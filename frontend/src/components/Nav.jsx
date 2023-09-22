@@ -8,11 +8,12 @@ import {
  Button,
  Container
 } from "react-bootstrap";
-
+import { Outlet, Link } from "react-router-dom";
     
 
 function Navigation() {
     return (
+        <>
     <Navbar expand="lg" className="bg-body-tertiary">
         <Container fluid>
             <Navbar.Brand href="#">MovieMan</Navbar.Brand>
@@ -59,7 +60,8 @@ function Navigation() {
             </Navbar.Collapse>
         </Container>
     </Navbar>
-    );
+    <Outlet />
+    </>);
 }
 
 export default Navigation;

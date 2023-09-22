@@ -1,7 +1,7 @@
 import { Button, Container, Card, Row, Col, Form } from 'react-bootstrap';
 import React, { useState } from 'react';
 import axios from 'axios';
-import {Movie, Show, People, Episode} from './results';
+import {Movie, Show, People, Episode} from '../components/results';
 // import "./styles.css";
 
 
@@ -52,7 +52,7 @@ function Search() {
 
 
 
-            <Show  shows={shows}/>
+            <Show  shows={shows} lim={4}/>
             <Movie movies={movies}/>
             <Episode episodes={episodes}/>
             <People people={people}/>
