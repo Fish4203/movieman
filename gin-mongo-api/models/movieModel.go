@@ -15,8 +15,8 @@ import (
 type Movie struct {
     Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"         `
     // basic info
-    Title       string                  `json:"title,omitempty"        bson:"title,omitempty"       tmdb:"title"        validate:"required"`
-    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview,omitempty"     validate:"required"`
+    Title       string                  `json:"title"                  bson:"title,omitempty"       tmdb:"title"        validate:"required"`
+    Description string                  `json:"description"            bson:"description,omitempty" tmdb:"overview,omitempty"     validate:"required"`
     Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"release_date,omitempty" validate:"required"`
     Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"       `
     Info        string                  `json:"info,omitempty"         bson:"info,omitempty"        tmdb:"homepage,omitempty"`

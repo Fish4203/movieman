@@ -13,8 +13,14 @@ func main() {
 
         configs.InitClient()
 
+        corsConfig := cors.DefaultConfig()
+        corsConfig.AllowOrigins = []string{"*"}
+        corsConfig.AllowCredentials = true
+        corsConfig.AllowHeaders = []string{"Authorization"}
+        // corsConfig.Debug = true
+
         // router.Use(middleware.AuthMiddleware())
-        router.Use(cors.Default())
+        router.Use(cors.New(corsConfig))
 
         routes.UserRoute(router)
         routes.TMDBRoute(router)

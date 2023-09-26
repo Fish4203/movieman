@@ -11,8 +11,8 @@ import (
 type Person struct {
     Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"`
     //basic info
-    Name        string                  `json:"name,omitempty"         bson:"name,omitempty"        tmdb:"name"    validate:"required"`
-    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"biography"`
+    Name        string                  `json:"name"                   bson:"name,omitempty"        tmdb:"name"    validate:"required"`
+    Description string                  `json:"description"            bson:"description,omitempty" tmdb:"biography"`
     Role        string                  `json:"role,omitempty"         bson:"role,omitempty"        tmdb:"known_for_department"`
     Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"birthday"`
     // extra media 

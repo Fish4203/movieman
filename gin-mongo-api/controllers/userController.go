@@ -87,6 +87,27 @@ func GetAUser() gin.HandlerFunc {
     }
 }
 
+func GetUser() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        userId := c.MustGet("userId").(string)
+        objId, _ := primitive.ObjectIDFromHex(userId)
+
+        res, err := models.FindUser(bson.D{{"_id", objId}})
+        if err != nil {
+            c.JSON(http.StatusNotFound, map[string]interface{}{"error": err.Error()})
+            return
+        }
+        if len(res) == 0 {
+            c.JSON(http.StatusNotFound, map[string]interface{}{"error": "cant find user"})
+            return
+        }
+        
+        user := res[0]
+        user.Password = ""
+        c.JSON(http.StatusOK, map[string]interface{}{"user": user})
+    }
+}
+
 
 func EditAUser() gin.HandlerFunc {
     return func(c *gin.Context) {
