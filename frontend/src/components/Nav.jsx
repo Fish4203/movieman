@@ -8,10 +8,30 @@ import {
  Button,
  Container
 } from "react-bootstrap";
-import { Outlet, Link } from "react-router-dom";
-    
+import { Outlet, Link, useNavigate } from "react-router-dom";
+import { useCookies } from 'react-cookie';
+import axios from 'axios';
+
 
 function Navigation() {
+    const navigate = useNavigate();
+    const [cookies, setCookie, removeCookie] = useCookies(['auth']);
+    const [username, setUserame] = useState("");
+
+
+    const userInfo = () => {
+        axios.get('http://127.0.0.1:4000/user', {headers: {Authorization: 'Bearer ' + cookies.authToken}})
+      .then(function (response) {
+        setUserame(response.data.user.name);
+      })
+      .catch(function (error) {
+        console.log(error);
+        removeCookie("authToken");
+      })
+      .finally(function () {
+      });
+    }
+
     return (
         <>
     <Navbar expand="lg" className="bg-body-tertiary">
@@ -24,38 +44,18 @@ function Navigation() {
                 style={{ maxHeight: '100px' }}
                 navbarScroll
                 >
-                    <Nav.Link href="#action1">Home</Nav.Link>
-                    <Nav.Link href="#action2">Discover</Nav.Link>
-                    
-                    <Nav.Link href="#" disabled>
-                      Link
-                    </Nav.Link>
-                    <Form className="d-flex">
-                        <Form.Control
-                          type="search"
-                          placeholder="Search"
-                          className="me-2"
-                          aria-label="Search"
-                        />
-                        <Button variant="outline-success">Search</Button>
-                    </Form>
+                    <Nav.Link onClick={() => navigate('')} >Home</Nav.Link>
+                    <Nav.Link onClick={() => navigate('search')}>Search</Nav.Link>
+                    <Nav.Link href="#action2">Torrents</Nav.Link>
+
                 </Nav>
                 <Nav
                 className=" justify-content-end"
                 style={{ maxHeight: '100px' }}
                 navbarScroll
                 >
-                    <NavDropdown title="Link" id="navbarScrollingDropdown">
-                        <NavDropdown.Item href="#action3">Action</NavDropdown.Item>
-                        <NavDropdown.Item href="#action4">
-                        Another action
-                        </NavDropdown.Item>
-                        <NavDropdown.Divider />
-                        <NavDropdown.Item href="#action5">
-                        Something else here
-                        </NavDropdown.Item>
-                    </NavDropdown>
-                    <Nav.Link href="#action2">Discover</Nav.Link>
+                    {cookies.authToken ? userInfo(): ''}
+                    {cookies.authToken ? username : <Nav.Link onClick={() => navigate('login')} >Login</Nav.Link>}    
                 </Nav>
             </Navbar.Collapse>
         </Container>

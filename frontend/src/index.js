@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import reportWebVitals from './reportWebVitals';
 import "bootstrap/dist/css/bootstrap.min.css";
 
+
 import Search from './pages/Search';
 import Details from './pages/Details';
 import NoPage from './pages/NoPage';

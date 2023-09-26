@@ -1,7 +1,7 @@
 import { Button, Container, Card, Row, Col, Form } from 'react-bootstrap';
 import React, { useState } from 'react';
 import axios from 'axios';
-import {Movie, Show, People, Episode} from '../components/results';
+import {Movie, Show, People, Episode} from '../components/Results';
 // import "./styles.css";
 
 
@@ -45,7 +45,7 @@ function Search() {
                     className="me-2"
                     onChange={(event) => setQuery(event.target.value)}
                     value={query}
-                    onKeyPress={(event) => {if (event.charCode==13) {getSearch()}}}
+                    onKeyPress={(event) => {if (event.charCode===13) {getSearch()}}}
                 />
                 <Button onClick={getSearch}>Search</Button>
             </div>
