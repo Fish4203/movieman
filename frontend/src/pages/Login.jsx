@@ -2,10 +2,12 @@ import {Form, Button, Container, Card, Row, Col } from 'react-bootstrap';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useCookies } from 'react-cookie';
+import { Outlet, Link, useNavigate } from "react-router-dom";
 
 
 
 function Login() {
+    const navigate = useNavigate();
     const [name, setName] = useState("");
     const [password, setPassword] = useState("");
     const [loginError, setLoginError] = useState("");
@@ -29,6 +31,8 @@ function Login() {
       .then(function (response) {
         setLoginError("Loged in");
         setCookie("authToken", response.data.token);
+        window.location.reload(false);
+        navigate("/")
       })
       .catch(function (error) {
         setLoginError("Error:" + error.response.data.error);

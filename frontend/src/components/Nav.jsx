@@ -32,6 +32,10 @@ function Navigation() {
       });
     }
 
+    const logout = () => {
+        removeCookie("authToken");
+    }
+
     return (
         <>
     <Navbar expand="lg" className="bg-body-tertiary">
@@ -55,7 +59,7 @@ function Navigation() {
                 navbarScroll
                 >
                     {cookies.authToken ? userInfo(): ''}
-                    {cookies.authToken ? username : <Nav.Link onClick={() => navigate('login')} >Login</Nav.Link>}    
+                    {cookies.authToken ? <><Nav.Link onClick={() => navigate('profile')} >username</Nav.Link> <Nav.Link onClick={() => logout()} >Logout</Nav.Link></> : <Nav.Link onClick={() => navigate('login')} >Login</Nav.Link>}    
                 </Nav>
             </Navbar.Collapse>
         </Container>
