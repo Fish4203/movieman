@@ -15,8 +15,8 @@ import (
 type Group struct {
     Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"`
     // basic info
-    Title       string                  `json:"title,omitempty"        bson:"title,omitempty"       validate:"required"`
-    Description string                  `json:"description,omitempty"  bson:"description,omitempty" validate:"required"`
+    Title       string                  `json:"title"                  bson:"title,omitempty"       validate:"required"`
+    Description string                  `json:"description"            bson:"description,omitempty" validate:"required"`
     Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"`
     Info        string                  `json:"info,omitempty"         bson:"info,omitempty"`
     // pupularity

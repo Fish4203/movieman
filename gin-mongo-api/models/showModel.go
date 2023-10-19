@@ -11,33 +11,30 @@ import (
 type Show struct {
     Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"         `
     // basic info
-    Title       string                  `json:"title,omitempty"        bson:"title,omitempty"       tmdb:"name,omitempty"             validate:"required"`
-    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview,omitempty"         validate:"required"`
-    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"first_air_date,omitempty"   validate:"required"`
-    Seasons     int                     `json:"seasons,omitempty"      bson:"seasons,omitempty"     tmdb:"number_of_seasons,omitempty"`
+    Title       string                  `json:"title"                  bson:"title,omitempty"       validate:"required"`
+    Description string                  `json:"description"            bson:"description,omitempty" validate:"required"`
+    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        validate:"required"`
+    Seasons     int                     `json:"seasons"                bson:"seasons,omitempty"     `
     Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"       `      
-    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"        tmdb:"homepage,omitempty"`
-    // reviews
-    Popularity  float64                 `json:"popularity,omitempty"   bson:"popularity,omitempty"  tmdb:"popularity,omitempty"`
-    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount,omitempty"   tmdb:"vote_count,omitempty"`
-    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"  tmdb:"vote_average,omitempty"`
+    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"        `
     Rating      string                  `json:"rating,omitempty"       bson:"rating,omitempty"      `
     // other media
-    Images      []string                `json:"images,omitempty"       bson:"images,omitempty"      tmdb"poster_path,omitempty"`
+    Images      []string                `json:"images,omitempty"       bson:"images,omitempty"      `
     // external ids
     Platforms   []string                `json:"platforms,omitempty"    bson:"platforms,omitempty"   `
     ExternalIds map[string]string       `json:"externalIds,omitempty"  bson:"externalIds,omitempty" `
+    Reviews     map[string]string       `json:"reviews,omitempty"      bson:"reviews,omitempty" `
 }
 
 
 type ShowSeason struct {
     /// ids 
-    ShowId      primitive.ObjectID      `json:"showId,omitempty"       bson:"showId,omitempty"                              validate:"required"`
-    SeasonID    int                     `json:"seasonId,omitempty"     bson:"seasonId,omitempty"    tmdb:"season_number"    validate:"required"`
+    ShowId      primitive.ObjectID      `json:"showId"                 bson:"showId,omitempty"      validate:"required"`
+    SeasonID    int                     `json:"seasonId"               bson:"seasonId,omitempty"    validate:"required"`
     // basic info 
-    Episodes    int                     `json:"episodes,omitempty"     bson:"episodes,omitempty"    tmdb:"episodes"         validate:"required"`
-    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview"         validate:"required"`
-    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"air_date"         validate:"required"`
+    Episodes    int                     `json:"episodes"               bson:"episodes,omitempty"    validate:"required"`
+    Description string                  `json:"description"            bson:"description,omitempty" validate:"required"`
+    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        validate:"required"`
     // external media 
     Images      []string                `json:"images,omitempty"       bson:"images,omitempty"`
 }
@@ -45,16 +42,15 @@ type ShowSeason struct {
 
 type ShowEpisode struct {
     // ids
-    ShowId      primitive.ObjectID      `json:"showId,omitempty"       bson:"showId,omitempty"                              validate:"required"`
-    SeasonID    int                     `json:"seasonId,omitempty"     bson:"seasonId,omitempty"                            validate:"required"`
-    EpisodeID   int                     `json:"episodeId,omitempty"    bson:"episodeId,omitempty"   tmdb:"episode_number"   validate:"required"`
+    ShowId      primitive.ObjectID      `json:"showId"                 bson:"showId,omitempty"      validate:"required"`
+    SeasonID    int                     `json:"seasonId"               bson:"seasonId,omitempty"    validate:"required"`
+    EpisodeID   int                     `json:"episodeId"              bson:"episodeId,omitempty"   validate:"required"`
     // basic info 
-    Title       string                  `json:"title,omitempty"        bson:"title,omitempty"       tmdb:"name"             validate:"required"`
-    Description string                  `json:"description,omitempty"  bson:"description,omitempty" tmdb:"overview"         validate:"required"`
-    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"air_date"`
+    Title       string                  `json:"title"                  bson:"title,omitempty"       validate:"required"`
+    Description string                  `json:"description"            bson:"description,omitempty" validate:"required"`
+    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        `
     // ratings 
-    VoteCount   int                     `json:"voteCount,omitempty"    bson:"voteCount,omitempty"   tmdb:"vote_count"`
-    VoteRating  float64                 `json:"voteRating,omitempty"   bson:"voteRating,omitempty"  tmdb:"vote_average"`
+    Reviews     map[string]string       `json:"reviews,omitempty"      bson:"reviews,omitempty" `
     // external media
     Images      []string                `json:"images,omitempty"       bson:"images,omitempty"`
 }

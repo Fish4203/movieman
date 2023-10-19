@@ -23,8 +23,8 @@ func main() {
         router.Use(cors.New(corsConfig))
 
         routes.UserRoute(router)
-        routes.TMDBRoute(router)
         routes.GetMediaRoute(router)
+        routes.PostMediaRoute(router)
         routes.IndexerRoute(router)
         routes.QbtRoute(router)
         routes.WatchRoute(router)

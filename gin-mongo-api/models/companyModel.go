@@ -11,8 +11,8 @@ import (
 type Company struct {
     Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"`
     //basic info
-    Name        string                  `json:"name,omitempty"         bson:"name,omitempty"        validate:"required"`
-    Description string                  `json:"description,omitempty"  bson:"description,omitempty" `
+    Name        string                  `json:"name"                   bson:"name,omitempty"        validate:"required"`
+    Description string                  `json:"description"            bson:"description,omitempty" `
 	Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        `
     // extra media 
     Image       []string                `json:"image,omitempty"        bson:"image,omitempty"`

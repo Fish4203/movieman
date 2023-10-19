@@ -15,9 +15,9 @@ import (
 
 type User struct {
     Id       primitive.ObjectID `json:"id,omitempty"        bson:"_id,omitempty"`
-    Name     string             `json:"name,omitempty"      bson:"name,omitempty"       validate:"required"`
+    Name     string             `json:"name"                bson:"name,omitempty"       validate:"required"`
     Password string             `json:"password,omitempty"  bson:"password,omitempty"   validate:"required"`
-    Role     string             `json:"role,omitempty"      bson:"role,omitempty"`
+    Role     string             `json:"role"                bson:"role,omitempty"`
 }
 
 var userCollection *mongo.Collection = configs.GetCollection(configs.DB, "users")

@@ -15,8 +15,8 @@ type Watch struct {
     Book        primitive.ObjectID `json:"gook,omitempty"       bson:"gook,omitempty"`
     Game        primitive.ObjectID `json:"game,omitempty"       bson:"game,omitempty"`
     User        primitive.ObjectID `json:"user,omitempty"       bson:"user,omitempty"       validate:"required"`
-    Title       string             `json:"title,omitempty"      bson:"title,omitempty"      validate:"required"`
-    Watched     int                `json:"watched,omitempty"    bson:"watched,omitempty"    validate:"required"`
+    Title       string             `json:"title"                bson:"title,omitempty"      validate:"required"`
+    Watched     int                `json:"watched"              bson:"watched,omitempty"    validate:"required"`
     UserRating  float64            `json:"userRating,omitempty" bson:"userRating,omitempty"`
     Notes       string             `json:"notes,omitempty"      bson:"notes,omitempty"`
 }
