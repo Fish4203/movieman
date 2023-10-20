@@ -1,40 +1,27 @@
 package controllers
 
 import (
-	// "context"
-	// "gin-mongo-api/configs"
-
+	"gin-mongo-api/middleware"
 	"gin-mongo-api/models"
-	// "gin-mongo-api/responses"
-	// "gin-mongo-api/middleware"
-	// "fmt"
+	"gin-mongo-api/responses"
 	"net/http"
-	// "io"
-	// "encoding/json"
-	// "os"
-	// "strings"
-	// "compress/gzip"
-	// "time"
+	"os"
 
 	"github.com/gin-gonic/gin"
-	// "github.com/go-playground/validator/v10"
-	// "go.mongodb.org/mongo-driver/mongo"
-	// "golang.org/x/crypto/bcrypt"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-type bultRequest struct {
-	Movies       []models.Movie       `json:"movies"`
-	Shows        []models.Show        `json:"shows"`
-	ShowSeasons  []models.ShowSeason  `json:"showSeasons"`
-	ShowEpisodes []models.ShowEpisode `json:"showEpisodes"`
-	People       []models.Person      `json:"people"`
-	Books        []models.Book        `json:"books"`
-	Games        []models.Game        `json:"games"`
-}
 
 func BulkAdd() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var request bultRequest
+		tokenString := middleware.ExtractToken(c)
+
+		if tokenString != os.Getenv("APITOKEN") {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": "invald api token"})
+			return
+		}
+
+		var request responses.BulkRequest
 
 		if err := c.BindJSON(&request); err != nil {
 			c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
@@ -47,19 +34,131 @@ func BulkAdd() gin.HandlerFunc {
 		if err := models.WriteShow(request.Shows); err != nil {
 			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
-		if err := models.WriteShowSeason(request.ShowSeasons); err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-		}
-		if err := models.WriteShowEpisode(request.ShowEpisodes); err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-		}
-		if err := models.WritePerson(request.People); err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		if len(request.ShowSeasons) > 0 && len(request.ShowSeasons) <= len(request.Shows) {
+			var filter bson.A
+			var seasons []models.ShowSeason
+			var episodes []models.ShowEpisode
+
+			for i := 0; i < len(request.Shows); i++ {
+				filter = append(filter, bson.M{"title": request.Shows[i].Title, "date": request.Shows[i].Date})
+			}
+
+			showsres, err := models.FindShow(bson.D{{"$or", filter}})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			}
+
+			for i := 0; i < len(request.ShowSeasons); i++ {
+				for j := 0; j < len(request.ShowSeasons[i]); j++ {
+					request.ShowSeasons[i][j].ShowId = showsres[i].Id
+				}
+				seasons = append(seasons, request.ShowSeasons[i]...)
+
+				for j := 0; j < len(request.ShowEpisodes[i]); j++ {
+					request.ShowEpisodes[i][j].ShowId = showsres[i].Id
+				}
+				episodes = append(episodes, request.ShowEpisodes[i]...)
+			}
+
+			if err := models.WriteShowSeason(seasons); err != nil {
+				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			}
+			if err := models.WriteShowEpisode(episodes); err != nil {
+				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			}
 		}
 		if err := models.WriteBook(request.Books); err != nil {
 			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
 		if err := models.WriteGame(request.Games); err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		}
+
+		// adds the movies and shows to the people/ groups/ companies if relevent
+		if request.Linked {
+			// defs
+			var movies []primitive.ObjectID
+			var shows []primitive.ObjectID
+			var books []primitive.ObjectID
+			var games []primitive.ObjectID
+			var filterMovies bson.A
+			var filterShows bson.A
+			var filterBooks bson.A
+			var filterGames bson.A
+
+			// adding all the media to the tilters
+			for i := 0; i < len(request.Movies); i++ {
+				filterMovies = append(filterMovies, bson.M{"title": request.Movies[i].Title, "date": request.Movies[i].Date})
+			}
+			for i := 0; i < len(request.Shows); i++ {
+				filterShows = append(filterShows, bson.M{"title": request.Shows[i].Title, "date": request.Shows[i].Date})
+			}
+			for i := 0; i < len(request.Books); i++ {
+				filterBooks = append(filterBooks, bson.M{"title": request.Books[i].Title, "date": request.Books[i].Date})
+			}
+			for i := 0; i < len(request.Games); i++ {
+				filterGames = append(filterGames, bson.M{"title": request.Games[i].Title, "date": request.Games[i].Date})
+			}
+
+			// searching the database for the media
+			movieres, err := models.FindMovie(bson.D{{"$or", filterMovies}})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			}
+			showres, err := models.FindShow(bson.D{{"$or", filterShows}})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			}
+			bookres, err := models.FindBook(bson.D{{"$or", filterBooks}})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			}
+			gameres, err := models.FindGame(bson.D{{"$or", filterGames}})
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			}
+
+			// converting the search results into lists of ids
+			for i := 0; i < len(movieres); i++ {
+				movies = append(movies, movieres[i].Id)
+			}
+			for i := 0; i < len(showres); i++ {
+				shows = append(shows, showres[i].Id)
+			}
+			for i := 0; i < len(bookres); i++ {
+				books = append(books, bookres[i].Id)
+			}
+			for i := 0; i < len(gameres); i++ {
+				games = append(games, gameres[i].Id)
+			}
+
+			// adding the media ids to the people, companies, groups
+			for i := 0; i < len(request.People); i++ {
+				request.People[i].Movies = movies
+				request.People[i].Shows = shows
+				request.People[i].Books = books
+				request.People[i].Games = games
+			}
+			for i := 0; i < len(request.Companies); i++ {
+				request.Companies[i].Movies = movies
+				request.Companies[i].Shows = shows
+				request.Companies[i].Books = books
+				request.Companies[i].Games = games
+			}
+			for i := 0; i < len(request.Groups); i++ {
+				request.Groups[i].Movies = movies
+				request.Groups[i].Shows = shows
+				request.Groups[i].Books = books
+				request.Groups[i].Games = games
+			}
+		}
+		if err := models.WritePerson(request.People); err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		}
+		if err := models.WriteCompany(request.Companies); err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+		}
+		if err := models.WriteGroup(request.Groups); err != nil {
 			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 		}
 
