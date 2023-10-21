@@ -84,12 +84,7 @@ func TMDBSearch() gin.HandlerFunc {
 
 		var result map[string]interface{}
 
-		length := 20
-		if int(json["total_results"].(float64)) < 20 {
-			length = int(json["total_results"].(float64))
-		}
-
-		for i := 0; i < length; i++ {
+		for i := 0; i < len(json["results"].([]interface{})); i++ {
 			result = json["results"].([]interface{})[i].(map[string]interface{})
 
 			if result["media_type"] == "tv" {
@@ -140,7 +135,7 @@ func TMDBSearchCollection() gin.HandlerFunc {
 
 		var err error
 		query := strings.Replace(c.Query("q"), " ", "%20", -1)
-		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/collection?query="+query+"&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
+		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/collection?query="+query+"&include_adult=true&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 			return
@@ -148,12 +143,7 @@ func TMDBSearchCollection() gin.HandlerFunc {
 
 		var result map[string]interface{}
 
-		length := 20
-		if int(json["total_results"].(float64)) < 20 {
-			length = int(json["total_results"].(float64))
-		}
-
-		for i := 0; i < length; i++ {
+		for i := 0; i < len(json["results"].([]interface{})); i++ {
 			result = json["results"].([]interface{})[i].(map[string]interface{})
 
 			var group models.Group
@@ -192,12 +182,7 @@ func TMDBSearchCompany() gin.HandlerFunc {
 
 		var result map[string]interface{}
 
-		length := 20
-		if int(json["total_results"].(float64)) < 20 {
-			length = int(json["total_results"].(float64))
-		}
-
-		for i := 0; i < length; i++ {
+		for i := 0; i < len(json["results"].([]interface{})); i++ {
 			result = json["results"].([]interface{})[i].(map[string]interface{})
 
 			var company models.Company
@@ -236,12 +221,7 @@ func TMDBPopular() gin.HandlerFunc {
 
 		var result map[string]interface{}
 
-		length := 20
-		if int(json["total_results"].(float64)) < 20 {
-			length = int(json["total_results"].(float64))
-		}
-
-		for i := 0; i < length; i++ {
+		for i := 0; i < len(json["results"].([]interface{})); i++ {
 			result = json["results"].([]interface{})[i].(map[string]interface{})
 
 			if result["media_type"] == "tv" {

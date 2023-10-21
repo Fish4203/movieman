@@ -6,8 +6,8 @@ import (
 
 type Group struct {
 	Id          primitive.ObjectID   `json:"id,omitempty"      `
-	Title       string               `json:"title"  			tmdb:"name,omitempty"       validate:"required"`
-	Description string               `json:"description"        tmdb:"overview,omitempty" 	validate:"required"`
+	Title       string               `json:"title" tmdb:"name,omitempty"       validate:"required"`
+	Description string               `json:"description" tmdb:"overview,omitempty" validate:"required"`
 	Genre       []string             `json:"genre,omitempty"    `
 	Info        string               `json:"info,omitempty"     `
 	Movies      []primitive.ObjectID `json:"movies,omitempty"       `

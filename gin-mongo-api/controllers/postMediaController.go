@@ -101,35 +101,46 @@ func BulkAdd() gin.HandlerFunc {
 			}
 
 			// searching the database for the media
-			movieres, err := models.FindMovie(bson.D{{"$or", filterMovies}})
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-			}
-			showres, err := models.FindShow(bson.D{{"$or", filterShows}})
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-			}
-			bookres, err := models.FindBook(bson.D{{"$or", filterBooks}})
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-			}
-			gameres, err := models.FindGame(bson.D{{"$or", filterGames}})
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			if len(filterMovies) != 0 {
+				movieres, err := models.FindMovie(bson.D{{Key: "$or", Value: filterMovies}})
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+				}
+				for i := 0; i < len(movieres); i++ {
+					movies = append(movies, movieres[i].Id)
+				}
 			}
 
-			// converting the search results into lists of ids
-			for i := 0; i < len(movieres); i++ {
-				movies = append(movies, movieres[i].Id)
+			if len(filterShows) != 0 {
+				showres, err := models.FindShow(bson.D{{Key: "$or", Value: filterShows}})
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+				}
+				for i := 0; i < len(showres); i++ {
+					shows = append(shows, showres[i].Id)
+				}
 			}
-			for i := 0; i < len(showres); i++ {
-				shows = append(shows, showres[i].Id)
+
+			if len(filterBooks) != 0 {
+				bookres, err := models.FindBook(bson.D{{Key: "$or", Value: filterBooks}})
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+				}
+
+				for i := 0; i < len(bookres); i++ {
+					books = append(books, bookres[i].Id)
+				}
 			}
-			for i := 0; i < len(bookres); i++ {
-				books = append(books, bookres[i].Id)
-			}
-			for i := 0; i < len(gameres); i++ {
-				games = append(games, gameres[i].Id)
+
+			if len(filterGames) != 0 {
+				gameres, err := models.FindGame(bson.D{{Key: "$or", Value: filterGames}})
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+				}
+
+				for i := 0; i < len(gameres); i++ {
+					games = append(games, gameres[i].Id)
+				}
 			}
 
 			// adding the media ids to the people, companies, groups

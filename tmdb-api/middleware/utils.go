@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -55,19 +56,20 @@ func JsonRequestGet(url string, header string) (map[string]interface{}, error) {
 }
 
 func JsonRequestPost(body map[string]interface{}) error {
+	// fmt.Println(body)
 	marshalled, err := json.Marshal(body)
 	if err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", os.Getenv("SERVERIP")+"/media", bytes.NewReader(marshalled))
+	req, err := http.NewRequest("POST", "http://127.0.0.1:4000/media", bytes.NewReader(marshalled))
 	if err != nil {
 		return err
 	}
 
 	// req.Header.Add("Accept-Encoding", "gzip, deflate, br")
 	req.Header.Add("accept", "application/json")
-	req.Header.Add("Authorization", os.Getenv("SERVERTOKEN"))
+	req.Header.Add("Authorization", "Barrer "+os.Getenv("SERVERTOKEN"))
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -86,6 +88,8 @@ func JsonRequestPost(body map[string]interface{}) error {
 	if res.StatusCode == 201 {
 		return nil
 	} else {
+		body, _ := io.ReadAll(res.Body)
+		fmt.Println(body)
 		return errors.New("invalid statuscode:" + strconv.Itoa(res.StatusCode))
 	}
 }
