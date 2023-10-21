@@ -79,7 +79,7 @@ func GetMediaSearch() gin.HandlerFunc {
 			out["groups"] = groups
 		}
 
-		if strings.ContainsAny(types, "m") {
+		if strings.ContainsAny(types, "c") {
 			companies, err := models.FindCompany(bson.D{{"name", bson.D{{"$regex", query}, {"$options", "i"}}}})
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
