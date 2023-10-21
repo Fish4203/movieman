@@ -12,7 +12,7 @@ func TMDBRoute(router *gin.Engine) {
 	router.GET("/TMDB/movie/:movieId", controllers.TMDBMovieDetails())
 	router.GET("/TMDB/show/:showId", controllers.TMDBShowDetails())
 	router.GET("/TMDB/person/:personId", controllers.TMDBPersonDetails())
-	router.GET("/TMDB/company/:Id", controllers.TMDBCompanyDetails())
+	// router.GET("/TMDB/company/:Id", controllers.TMDBCompanyDetails())
 	router.GET("/TMDB/collection/:Id", controllers.TMDBCollectionDetails())
 	// serch
 	router.GET("/TMDB/search/company", controllers.TMDBSearchCompany())

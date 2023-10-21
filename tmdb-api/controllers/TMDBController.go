@@ -76,7 +76,7 @@ func TMDBSearch() gin.HandlerFunc {
 
 		var err error
 		query := strings.Replace(c.Query("q"), " ", "%20", -1)
-		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/multi?query="+query+"&include_adult=false&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
+		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/multi?query="+query+"&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 			return
@@ -97,7 +97,6 @@ func TMDBSearch() gin.HandlerFunc {
 				decoder(result, &show)
 				show.Genre = genreHelper(result)
 				show.ExternalIds = extidHelper(result)
-				fmt.Println(result)
 				shows = append(shows, show)
 			} else if result["media_type"] == "movie" {
 				var movie models.Movie
@@ -123,6 +122,94 @@ func TMDBSearch() gin.HandlerFunc {
 		out["movies"] = movies
 		out["shows"] = shows
 		out["people"] = people
+
+		err = middleware.JsonRequestPost(out)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
+	}
+}
+
+func TMDBSearchCollection() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		var groups []models.Group
+
+		var err error
+		query := strings.Replace(c.Query("q"), " ", "%20", -1)
+		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/collection?query="+query+"&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+
+		var result map[string]interface{}
+
+		length := 20
+		if int(json["total_results"].(float64)) < 20 {
+			length = int(json["total_results"].(float64))
+		}
+
+		for i := 0; i < length; i++ {
+			result = json["results"].([]interface{})[i].(map[string]interface{})
+
+			var group models.Group
+			decoder(result, &group)
+			group.ExternalIds = extidHelper(result)
+			groups = append(groups, group)
+
+		}
+
+		var out = make(map[string]interface{})
+		out["linked"] = false
+		out["groups"] = groups
+
+		err = middleware.JsonRequestPost(out)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
+	}
+}
+
+func TMDBSearchCompany() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+		var companies []models.Company
+
+		var err error
+		query := strings.Replace(c.Query("q"), " ", "%20", -1)
+		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/company?query="+query+"&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+
+		var result map[string]interface{}
+
+		length := 20
+		if int(json["total_results"].(float64)) < 20 {
+			length = int(json["total_results"].(float64))
+		}
+
+		for i := 0; i < length; i++ {
+			result = json["results"].([]interface{})[i].(map[string]interface{})
+
+			var company models.Company
+			decoder(result, &company)
+			company.ExternalIds = extidHelper(result)
+			companies = append(companies, company)
+
+		}
+
+		var out = make(map[string]interface{})
+		out["linked"] = false
+		out["companies"] = companies
 
 		err = middleware.JsonRequestPost(out)
 		if err != nil {
@@ -268,6 +355,58 @@ func TMDBPersonDetails() gin.HandlerFunc {
 		out["movies"] = movies
 		out["shows"] = shows
 		out["people"] = []models.Person{person}
+
+		err = middleware.JsonRequestPost(out)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
+	}
+}
+
+func TMDBCollectionDetails() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		query := strings.Replace(c.Param("Id"), " ", "%20", -1)
+		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/collection/"+query+"&language=en-US", "Bearer "+os.Getenv("TMDB"))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+
+		var group models.Group
+		decoder(json, &group)
+		group.ExternalIds = extidHelper(json)
+
+		var movies []models.Movie
+		var shows []models.Show
+
+		credits := json["parts"].([]interface{})
+
+		for i := 0; i < len(credits); i++ {
+			result := credits[i].(map[string]interface{})
+
+			if result["media_type"] == "tv" {
+				var show models.Show
+				decoder(result, &show)
+				show.Genre = genreHelper(result)
+				show.ExternalIds = extidHelper(result)
+				shows = append(shows, show)
+			} else {
+				var movie models.Movie
+				decoder(result, &movie)
+				movie.Genre = genreHelper(result)
+				movie.ExternalIds = extidHelper(result)
+				movies = append(movies, movie)
+			}
+		}
+
+		var out = make(map[string]interface{})
+		out["linked"] = true
+		out["movies"] = movies
+		out["shows"] = shows
+		out["groups"] = []models.Group{group}
 
 		err = middleware.JsonRequestPost(out)
 		if err != nil {
