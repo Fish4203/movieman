@@ -12,9 +12,10 @@ import (
 )
 
 type Provider struct {
-	Id        primitive.ObjectID `json:"id,omitempty"        bson:"_id,omitempty"`
-	Name      string             `json:"name"                bson:"name,omitempty"       validate:"required"`
-	Endpoints map[string]string  `json:"emdpoints" bson:"endpoints" validate:"required"`
+	Id     primitive.ObjectID `json:"id,omitempty"        bson:"_id,omitempty"`
+	Name   string             `json:"name"                bson:"name,omitempty"       validate:"required"`
+	Domain string             `json:"domain" bson:"domain" validate:"required"`
+	Types  string             `json:"types" bson:"types" validate:"required"`
 }
 
 var provCollection *mongo.Collection = configs.GetCollection(configs.DB, "providers")

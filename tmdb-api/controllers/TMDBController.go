@@ -70,45 +70,91 @@ func TMDBTest() gin.HandlerFunc {
 func TMDBSearch() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
+		var companies []models.Company
+		var groups []models.Group
 		var people []models.Person
 		var movies []models.Movie
 		var shows []models.Show
 
-		var err error
+		types := c.Query("types")
 		query := strings.Replace(c.Query("q"), " ", "%20", -1)
-		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/multi?query="+query+"&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-			return
-		}
+		var err error
 
-		var result map[string]interface{}
-
-		for i := 0; i < len(json["results"].([]interface{})); i++ {
-			result = json["results"].([]interface{})[i].(map[string]interface{})
-
-			if result["media_type"] == "tv" {
-				var show models.Show
-				decoder(result, &show)
-				show.Genre = genreHelper(result)
-				show.ExternalIds = extidHelper(result)
-				shows = append(shows, show)
-			} else if result["media_type"] == "movie" {
-				var movie models.Movie
-				decoder(result, &movie)
-				movie.Genre = genreHelper(result)
-				movie.ExternalIds = extidHelper(result)
-				movies = append(movies, movie)
-			} else {
-				var jsonPerson map[string]interface{}
-				jsonPerson, _ = middleware.JsonRequestGet("https://api.themoviedb.org/3/person/"+strconv.Itoa(int(result["id"].(float64)))+"?language=en-US", "Bearer "+os.Getenv("TMDB"))
-				var person models.Person
-				decoder(jsonPerson, &person)
-				person.ExternalIds = extidHelper(jsonPerson)
-				people = append(people, person)
-			}
+		if strings.ContainsAny(types, "m") || strings.ContainsAny(types, "s") || strings.ContainsAny(types, "p") {
+			json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/multi?query="+query+"&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+				return
+			}
+
+			var result map[string]interface{}
+
+			for i := 0; i < len(json["results"].([]interface{})); i++ {
+				result = json["results"].([]interface{})[i].(map[string]interface{})
+
+				if result["media_type"] == "tv" {
+					var show models.Show
+					decoder(result, &show)
+					show.Genre = genreHelper(result)
+					show.ExternalIds = extidHelper(result)
+					shows = append(shows, show)
+				} else if result["media_type"] == "movie" {
+					var movie models.Movie
+					decoder(result, &movie)
+					movie.Genre = genreHelper(result)
+					movie.ExternalIds = extidHelper(result)
+					movies = append(movies, movie)
+				} else {
+					var jsonPerson map[string]interface{}
+					jsonPerson, _ = middleware.JsonRequestGet("https://api.themoviedb.org/3/person/"+strconv.Itoa(int(result["id"].(float64)))+"?language=en-US", "Bearer "+os.Getenv("TMDB"))
+					var person models.Person
+					decoder(jsonPerson, &person)
+					person.ExternalIds = extidHelper(jsonPerson)
+					people = append(people, person)
+				}
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+				}
+			}
+		}
+
+		if strings.ContainsAny(types, "g") {
+			json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/company?query="+query+"&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+				return
+			}
+
+			var result map[string]interface{}
+
+			for i := 0; i < len(json["results"].([]interface{})); i++ {
+				result = json["results"].([]interface{})[i].(map[string]interface{})
+
+				var company models.Company
+				decoder(result, &company)
+				company.ExternalIds = extidHelper(result)
+				companies = append(companies, company)
+
+			}
+		}
+
+		if strings.ContainsAny(types, "c") {
+			json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/collection?query="+query+"&include_adult=true&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+				return
+			}
+
+			var result map[string]interface{}
+
+			for i := 0; i < len(json["results"].([]interface{})); i++ {
+				result = json["results"].([]interface{})[i].(map[string]interface{})
+
+				var group models.Group
+				decoder(result, &group)
+				group.ExternalIds = extidHelper(result)
+				groups = append(groups, group)
+
 			}
 		}
 
@@ -117,83 +163,7 @@ func TMDBSearch() gin.HandlerFunc {
 		out["movies"] = movies
 		out["shows"] = shows
 		out["people"] = people
-
-		err = middleware.JsonRequestPost(out)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
-	}
-}
-
-func TMDBSearchCollection() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		var groups []models.Group
-
-		var err error
-		query := strings.Replace(c.Query("q"), " ", "%20", -1)
-		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/collection?query="+query+"&include_adult=true&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-			return
-		}
-
-		var result map[string]interface{}
-
-		for i := 0; i < len(json["results"].([]interface{})); i++ {
-			result = json["results"].([]interface{})[i].(map[string]interface{})
-
-			var group models.Group
-			decoder(result, &group)
-			group.ExternalIds = extidHelper(result)
-			groups = append(groups, group)
-
-		}
-
-		var out = make(map[string]interface{})
-		out["linked"] = false
 		out["groups"] = groups
-
-		err = middleware.JsonRequestPost(out)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-			return
-		}
-
-		c.JSON(http.StatusCreated, map[string]interface{}{"result": "success"})
-	}
-}
-
-func TMDBSearchCompany() gin.HandlerFunc {
-	return func(c *gin.Context) {
-
-		var companies []models.Company
-
-		var err error
-		query := strings.Replace(c.Query("q"), " ", "%20", -1)
-		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/search/company?query="+query+"&language=en-US&page=1", "Bearer "+os.Getenv("TMDB"))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-			return
-		}
-
-		var result map[string]interface{}
-
-		for i := 0; i < len(json["results"].([]interface{})); i++ {
-			result = json["results"].([]interface{})[i].(map[string]interface{})
-
-			var company models.Company
-			decoder(result, &company)
-			company.ExternalIds = extidHelper(result)
-			companies = append(companies, company)
-
-		}
-
-		var out = make(map[string]interface{})
-		out["linked"] = false
 		out["companies"] = companies
 
 		err = middleware.JsonRequestPost(out)

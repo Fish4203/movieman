@@ -28,7 +28,7 @@ func main() {
 	// router.Use(middleware.AuthMiddleware())
 	router.Use(cors.New(corsConfig))
 
-	routes.TMDBRoute(router)
+	routes.Routes(router)
 
 	router.Run("localhost:4001")
 }
