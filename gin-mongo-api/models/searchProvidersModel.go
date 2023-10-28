@@ -67,7 +67,7 @@ func FindProvs() ([]Provider, error) {
 	var provs []Provider
 	defer cancel()
 
-	results, err := userCollection.Find(ctx, bson.M{})
+	results, err := provCollection.Find(ctx, bson.M{})
 	if err != nil {
 		return provs, err
 	}
