@@ -18,7 +18,7 @@ type Person struct {
 	Role        string `json:"role"                   bson:"role,omitempty"        `
 	Date        string `json:"date,omitempty"         bson:"date,omitempty"        `
 	// extra media
-	Image       []string          `json:"image,omitempty"        bson:"image,omitempty"`
+	Images      []string          `json:"images,omitempty"        bson:"images,omitempty"`
 	ExternalIds map[string]string `json:"externalIds,omitempty"  bson:"externalIds,omitempty"`
 	// works
 	Movies []primitive.ObjectID `json:"movies,omitempty"       bson:"movies,omitempty"`

@@ -14,6 +14,6 @@ type Group struct {
 	Shows       []primitive.ObjectID `json:"shows,omitempty"        `
 	Books       []primitive.ObjectID `json:"books,omitempty"        `
 	Games       []primitive.ObjectID `json:"games,omitempty"        `
-	Image       []string             `json:"image,omitempty"  tmdb:"poster_path,omitempty"       `
+	Images      []string             `json:"images,omitempty"  tmdb:"poster_path,omitempty"       `
 	ExternalIds map[string]string    `json:"externalIds,omitempty"  `
 }

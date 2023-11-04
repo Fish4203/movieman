@@ -32,6 +32,27 @@ func genreHelper(json map[string]interface{}) []string {
 	return out
 }
 
+func imageHelper(json map[string]interface{}) []string {
+	var out []string
+
+	if json["poster_path"] != nil {
+		poster := json["poster_path"].(string)
+		out = append(out, "https://image.tmdb.org/t/p/original"+poster)
+	}
+
+	if json["backdrop_path"] != nil {
+		poster := json["backdrop_path"].(string)
+		out = append(out, "https://image.tmdb.org/t/p/original"+poster)
+	}
+
+	if json["logo_path"] != nil {
+		poster := json["logo_path"].(string)
+		out = append(out, "https://image.tmdb.org/t/p/original"+poster)
+	}
+
+	return out
+}
+
 func extidHelper(json map[string]interface{}) map[string]string {
 	out := make(map[string]string)
 
@@ -97,12 +118,14 @@ func TMDBSearch() gin.HandlerFunc {
 					decoder(result, &show)
 					show.Genre = genreHelper(result)
 					show.ExternalIds = extidHelper(result)
+					show.Images = imageHelper(result)
 					shows = append(shows, show)
 				} else if result["media_type"] == "movie" {
 					var movie models.Movie
 					decoder(result, &movie)
 					movie.Genre = genreHelper(result)
 					movie.ExternalIds = extidHelper(result)
+					movie.Images = imageHelper(result)
 					movies = append(movies, movie)
 				} else {
 					var jsonPerson map[string]interface{}
@@ -110,6 +133,7 @@ func TMDBSearch() gin.HandlerFunc {
 					var person models.Person
 					decoder(jsonPerson, &person)
 					person.ExternalIds = extidHelper(jsonPerson)
+					person.Images = imageHelper(result)
 					people = append(people, person)
 				}
 				if err != nil {
@@ -133,6 +157,7 @@ func TMDBSearch() gin.HandlerFunc {
 				var company models.Company
 				decoder(result, &company)
 				company.ExternalIds = extidHelper(result)
+				company.Images = imageHelper(result)
 				companies = append(companies, company)
 
 			}
@@ -153,6 +178,7 @@ func TMDBSearch() gin.HandlerFunc {
 				var group models.Group
 				decoder(result, &group)
 				group.ExternalIds = extidHelper(result)
+				group.Images = imageHelper(result)
 				groups = append(groups, group)
 
 			}
@@ -199,12 +225,14 @@ func TMDBPopular() gin.HandlerFunc {
 				decoder(result, &show)
 				show.Genre = genreHelper(result)
 				show.ExternalIds = extidHelper(result)
+				show.Images = imageHelper(result)
 				shows = append(shows, show)
 			} else if result["media_type"] == "movie" {
 				var movie models.Movie
 				decoder(result, &movie)
 				movie.Genre = genreHelper(result)
 				movie.ExternalIds = extidHelper(result)
+				movie.Images = imageHelper(result)
 				movies = append(movies, movie)
 			} else {
 				var jsonPerson map[string]interface{}
@@ -212,6 +240,7 @@ func TMDBPopular() gin.HandlerFunc {
 				var person models.Person
 				decoder(jsonPerson, &person)
 				person.ExternalIds = extidHelper(jsonPerson)
+				person.Images = imageHelper(result)
 				people = append(people, person)
 			}
 			if err != nil {
@@ -248,6 +277,7 @@ func TMDBMovieDetails() gin.HandlerFunc {
 		decoder(result, &movie)
 		movie.Genre = genreHelper(result)
 		movie.ExternalIds = extidHelper(result)
+		movie.Images = imageHelper(result)
 
 		var out = make(map[string]interface{})
 		out["linked"] = false
@@ -275,6 +305,7 @@ func TMDBPersonDetails() gin.HandlerFunc {
 		var person models.Person
 		decoder(json, &person)
 		person.ExternalIds = extidHelper(json)
+		person.Images = imageHelper(json)
 
 		var movies []models.Movie
 		var shows []models.Show
@@ -328,6 +359,7 @@ func TMDBCollectionDetails() gin.HandlerFunc {
 		var group models.Group
 		decoder(json, &group)
 		group.ExternalIds = extidHelper(json)
+		group.Images = imageHelper(json)
 
 		var movies []models.Movie
 		var shows []models.Show
@@ -381,6 +413,7 @@ func TMDBShowDetails() gin.HandlerFunc {
 		decoder(result, &show)
 		show.Genre = genreHelper(result)
 		show.ExternalIds = extidHelper(result)
+		show.Images = imageHelper(result)
 
 		var seasons []models.ShowSeason
 		var episodes []models.ShowEpisode
@@ -393,6 +426,7 @@ func TMDBShowDetails() gin.HandlerFunc {
 
 			var season models.ShowSeason
 			decoder(seasonResult, &season)
+			season.Images = imageHelper(seasonResult)
 
 			seasons = append(seasons, season)
 			episodeResults := seasonResult["episodes"].([]interface{})
@@ -401,6 +435,7 @@ func TMDBShowDetails() gin.HandlerFunc {
 				var episode models.ShowEpisode
 				decoder(episodeResults[j].(map[string]interface{}), &episode)
 				episode.SeasonID = i
+				episode.Images = imageHelper(episodeResults[j].(map[string]interface{}))
 
 				episodes = append(episodes, episode)
 			}

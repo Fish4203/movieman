@@ -26,7 +26,7 @@ type Game struct {
 	// pupularity
 	Reviews map[string]string `json:"reviews,omitempty"      bson:"reviews,omitempty" `
 	// related media
-	Image []string `json:"image,omitempty"        bson:"image,omitempty"`
+	Images []string `json:"images,omitempty"        bson:"images,omitempty"`
 	// ids
 	ExternalIds map[string]string `json:"externalIds,omitempty"  bson:"externalIds,omitempty"`
 	Platforms   []string          `json:"platforms,omitempty"    bson:"platforms,omitempty"`

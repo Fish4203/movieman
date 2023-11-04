@@ -25,7 +25,7 @@ type Group struct {
 	Books  []primitive.ObjectID `json:"books,omitempty"        bson:"books,omitempty"`
 	Games  []primitive.ObjectID `json:"games,omitempty"        bson:"games,omitempty"`
 	// related media
-	Image []string `json:"image,omitempty"        bson:"image,omitempty"`
+	Images []string `json:"images,omitempty"        bson:"images,omitempty"`
 	// ids
 	ExternalIds map[string]string `json:"externalIds,omitempty"  bson:"externalIds,omitempty"`
 }

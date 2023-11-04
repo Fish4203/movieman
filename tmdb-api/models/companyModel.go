@@ -9,7 +9,7 @@ type Company struct {
 	Name        string               `json:"name"   tmdb:"name,omitempty"                validate:"required"`
 	Description string               `json:"description"           tmdb:"description,omitempty"  `
 	Date        string               `json:"date,omitempty"                 `
-	Image       []string             `json:"image,omitempty"     tmdb:"logo_path,omitempty"   `
+	Images      []string             `json:"images,omitempty"     tmdb:"logo_path,omitempty"   `
 	ExternalIds map[string]string    `json:"externalIds,omitempty"  `
 	Movies      []primitive.ObjectID `json:"movies,omitempty"       `
 	Shows       []primitive.ObjectID `json:"shows,omitempty"        `
