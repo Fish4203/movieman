@@ -82,7 +82,7 @@ function Result(post) {
     console.log(post);
     return (
         <Card className='m-2' style={{ width: '18rem' }}>
-        <Card.Img variant="top" src={'images' in post ? "images/" + post.images[0] : "images/"} />
+        <Card.Img variant="top" src={'images' in post ? post.images[0] : "https://placehold.co/200x100"} />
         <Card.Body>
             <Card.Title>{'title' in post ? post.title : post.name}</Card.Title>
             <Card.Text>

@@ -90,23 +90,29 @@ function Search() {
   }
 
 
-  function searchApis() {
+  async function searchApis() {
     let types = getTypes();
 
     let urls = [];
     provBool.map((prov) => {
-      urls.push(prov.domain + '/search?q=' + query + '&types=' + types);
+      if (prov.enabled) {
+        urls.push(prov.domain + '/search?q=' + query + '&types=' + types);
+      }
     });
 
     const requests = urls.map((url) => axios.get(url));
 
-    axios.all(requests).then(axios.spread((...responses) => {
+    await axios.all(requests).then(axios.spread((...responses) => {
       responses.forEach((resp) => {
-        console.log(resp);
+        // console.log("this should be first");
+        console.log(resp.status);
       });
     }));
-    
-  }
+
+    console.log("why");
+      
+    getSearch(); 
+    }
 
   function getSearch() {
     let types = getTypes();
