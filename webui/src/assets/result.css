@@ -1,0 +1,13 @@
+.centered {
+    display: flex;
+    background: gray;
+    justify-content: center;
+    align-items: center;
+  }
+
+
+.im {
+
+    max-height: 50vh; 
+    object-fit:contain;
+  }

@@ -2,6 +2,7 @@ import { Button, Container, Card, Row, Col, Form, ToggleButton, OverlayTrigger, 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {Result} from '../components/Results';
+import { MovieCard } from "../components/ResultsMovie";
 // import "./styles.css";
 
 
@@ -299,8 +300,9 @@ function Search() {
 
             <br />
 
-            <h2>Movies</h2><Row>
-            {movies.map(post => ( <Result post={post}/>))}
+            <h2>Movies</h2>
+            <Row>
+            {movies.map(post => ( <MovieCard post={post}/>))}
             </Row>
             <h2>Shows</h2><Row>
             {shows.map(post => ( <Result post={post}/>))}
