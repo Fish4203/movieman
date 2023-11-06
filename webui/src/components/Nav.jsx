@@ -11,7 +11,7 @@ import {
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import { useCookies } from 'react-cookie';
 import axios from 'axios';
-
+import "../assets/global.css";
 
 function Navigation() {
     const navigate = useNavigate();
@@ -38,7 +38,7 @@ function Navigation() {
 
     return (
         <>
-    <Navbar expand="lg" className="bg-body-tertiary">
+    <Navbar expand="lg" className="bg-body-tertiary " bg="dark" data-bs-theme="dark">
         <Container fluid>
             <Navbar.Brand href="#">MovieMan</Navbar.Brand>
             <Navbar.Toggle aria-controls="navbarScroll" />

@@ -68,9 +68,11 @@ function Details() {
           typeChar = "m";
         }
 
+        let extids = post[Object.keys(post)[0]][0].externalIds;
+
         prov.map((provi) => {
           if (provi.enabled && provi.types.includes(typeChar)) {
-            urls.push(provi.domain + '/' + type + '/' + post.externalIds["tmdb"]);
+            urls.push(provi.domain + '/' + type + '/' + extids[provi.name]);
           }
         });
     
@@ -94,7 +96,7 @@ function Details() {
         <Col xs={12} md={8}>
           {'movies' in post ? <MovieDetails post={post["movies"][0]}/>: ""}
         </Col>
-        <Col xs={6} md={4}>
+        <Col xs={12} md={4}>
         <Card>
           <Card.Header>
             <Card.Title>Update Details</Card.Title>

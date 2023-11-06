@@ -1,4 +1,4 @@
-import { Button, Container, Card, Row, Col, Form, ToggleButton, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { Button, Container, Card, Row, Col, Form, ToggleButton, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import {Result} from '../components/Results';
@@ -163,22 +163,23 @@ function Search() {
             <p>{status}</p>
 
             <div className="d-flex">
+              <InputGroup className='m-2'>
                 <Form.Control
                     type="search"
                     placeholder="Search"
-                    className="me-2"
                     onChange={(event) => setQuery(event.target.value)}
                     value={query}
-                    onKeyPress={(event) => {if (event.charCode===13) {getSearch()}}}
+                    onKeyDown={(event) => {if (event.charCode===13) {searchApis()}}}
+                    onKeyPress={(event) => {if (event.charCode===13) {searchApis()}}}
                 />
-                <Button className='ms-1' onClick={searchApis}>Full Search</Button>
-                <Button className='ms-1' onClick={getSearch}>quick Search</Button>
+                <Button variant='success' onClick={searchApis}>Full Search</Button>
+                <Button onClick={getSearch}>quick Search</Button>
+              </InputGroup>
             </div>
 
-            <br />
             <Row>
               <Col>
-                <Card>
+                <Card className='m-2'>
                   <Card.Header>Search categories</Card.Header>
                   <Card.Body>
                     <ToggleButton
@@ -266,7 +267,7 @@ function Search() {
                 </Card>
               </Col>
               <Col>
-                <Card>
+                <Card className='m-2'>
                   <Card.Header>External databases</Card.Header>
                   <Card.Body>
                     {provBool.map(post => (
@@ -274,7 +275,7 @@ function Search() {
                       placement="right"
                       overlay={
                         <Tooltip id={`tooltip-right`}>
-                          {post.types}
+                          {post.description}
                         </Tooltip>
                       }
                     >

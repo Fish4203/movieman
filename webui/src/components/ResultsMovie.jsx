@@ -1,4 +1,4 @@
-import { Button, Container, Card, Row, Col, Carousel } from 'react-bootstrap';
+import { Button, Container, Card, Row, Col, Carousel, Tabs, Tab, Badge, Stack } from 'react-bootstrap';
 import { Outlet, Link, useNavigate } from "react-router-dom";
 import "../assets/result.css";
 
@@ -42,50 +42,63 @@ function MovieDetails(post) {
             ))}
         </Carousel>
         </Container>
-        <br />
+        {'genre' in post ? <div>
+            <Stack direction="horizontal" gap={2} className='m-3'>
+                {post.genre.map(obj => (
+                    <Badge pill bg="success">
+                        {obj}
+                    </Badge>
+                ))}
+            </Stack>
+        </div>: ""}
         <h3>Description</h3>
         <p>{post.description}</p>
+        <br />
 
-        {'genre' in post ? <div>
-            <h3>Genres</h3>
-            <ul>
-                {post.genres.map(obj =>
-                    (<li>{obj}</li>)
-                )}
-            </ul>
-        </div>: ""}
+        <Tabs
+        defaultActiveKey="other"
+        id="uncontrolled-tab-example"
+        className="mb-3"
+        >
+            <Tab eventKey="other" title="Other facts">
+                <p>Relese date: {post.date}</p>
+                {'budget' in post ? <p>Budget: ${post.budget}</p> : ""}
+                {'length' in post ? <p>Length: {post.length} min</p> : ""}
+                {'rating' in post ? <p>Age Rating: {post.rating}</p> : ""}
+                {'info' in post ? <Button variant="info" href={post.info}>Info</Button>: ""}
+            </Tab>
+            {'reviews' in post ? <div>
+                <Tab eventKey="Reviews" title="Reviews" >
+                    <ul>
+                        {Object.keys(post.reviews).map(obj =>
+                            (<li>{obj}: {post.reviews[obj]}</li>)
+                        )}
+                    </ul>
+                </Tab>
+            </div>: <Tab eventKey="Reviews" title="Reviews" disabled></Tab>}
 
-        <h3>Other facts</h3>
-        <p>Relese date: {post.date}</p>
-        {'budget' in post ? <p>Budget: {post.budget}</p> : ""}
-        {'length' in post ? <p>Length: {post.length}</p> : ""}
-        {'rating' in post ? <p>Age Rating: {post.rating}</p> : ""}
-        {'info' in post ? <Button variant="info" href={post.info}>Info</Button>: ""}
+            {'platforms' in post ? <div>
+                <Tab eventKey="Platforms" title="Platforms">
+                    <ul>
+                        {post.platforms.map(obj =>
+                            (<li>{obj}</li>)
+                        )}
+                    </ul>
+                </Tab>
+            </div>: <Tab eventKey="Platforms" title="Platforms" disabled></Tab>}
 
-        {'reviews' in post ? <div>
-            <h3>Reviews</h3>
-            <ul>
-                {Object.keys(post.reviews).map(obj =>
-                    (<li>{obj}: {post.reviews[obj]}</li>)
-                )}
-            </ul>
-        </div>: ""}
+            {'externalIds' in post ? 
+                <Tab eventKey="externalIds" title="External Ids" >
+                    <ul>
+                        {Object.keys(post.externalIds).map(obj =>
+                            (<li>{obj}: {post.externalIds[obj]}</li>)
+                        )}
+                    </ul>
+                </Tab>
+            : <Tab eventKey="externalIds" title="External Ids" disabled></Tab>}
+        </Tabs>
 
-        {'platforms' in post ? <div>
-            <h3>Platforms</h3>
-            <ul>
-                {post.platforms.map(obj =>
-                    (<li>{obj}</li>)
-                )}
-            </ul>
-        </div>: ""}
 
-        <p>External Ids:</p>
-        <ul>
-            {Object.keys(post.externalIds).map(obj =>
-                (<li>{obj}: {post.externalIds[obj]}</li>)
-            )}
-        </ul>
     </div>
     );
 }
