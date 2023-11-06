@@ -1,8 +1,7 @@
 import { Button, Container, Card, Row, Col, Carousel, Tabs, Tab, Badge, Stack } from 'react-bootstrap';
-import { Outlet, Link, useNavigate } from "react-router-dom";
 import "../assets/result.css";
 
-function MovieCard(post) {
+function GameCard(post) {
     const navigate = useNavigate();
     post = post.post;
     return (
@@ -15,14 +14,13 @@ function MovieCard(post) {
             </Card.Text>
         </Card.Body>
         <Card.Footer>
-            Release date: {post.date}
-            {'length' in post ? <>Length: {post.length}</> : ""}
+            Release date: {post.date} 
         </Card.Footer>
     </Card>
     );
 }
 
-function MovieDetails(post) {
+function GameDetails(post) {
     post = post.post;
     return (
     <div>
@@ -53,18 +51,24 @@ function MovieDetails(post) {
         <h3>Description</h3>
         <p>{post.description}</p>
         <br />
+        {'info' in post ? <Button variant="info" href={post.info}>Info</Button>: ""}
 
         <Tabs
         defaultActiveKey="other"
         id="uncontrolled-tab-example"
         className="mb-3"
         >
-            <Tab eventKey="other" title="Other facts">
-                <p>Relese date: {post.date}</p>
-                {'budget' in post ? <p>Budget: ${post.budget}</p> : ""}
-                {'length' in post ? <p>Length: {post.length} min</p> : ""}
-                {'rating' in post ? <p>Age Rating: {post.rating}</p> : ""}
-                {'info' in post ? <Button variant="info" href={post.info}>Info</Button>: ""}
+            <Tab eventKey="other" title="Specs">
+                <Row>
+                    <Col>
+                        <p>Min specs</p>
+                        {'minReq' in post ? <p> {post.minReq}</p> : <p>Not Provided</p>}
+                    </Col>
+                    <Col>
+                        <p>Recomended specs</p>
+                        {'recReq' in post ? <p> {post.recReq}</p> : <p>Not Provided</p>}
+                    </Col>
+                </Row>
             </Tab>
             {'reviews' in post ? <div>
                 <Tab eventKey="Reviews" title="Reviews" >
@@ -102,4 +106,4 @@ function MovieDetails(post) {
     );
 }
 
-export {MovieCard, MovieDetails};
+export {GameCard, GameDetails};
