@@ -9,6 +9,7 @@ import { GameDetails } from "../components/ResultsGame";
 import { PersonDetails } from "../components/ResultsPerson";
 import { CompanyDetails } from "../components/ResultsCompany";
 import { GroupDetails } from "../components/ResultsGroup";
+import { EpisodeDetails } from '../components/ResultsEpisode';
 
 
 
@@ -102,6 +103,7 @@ function Details() {
         <Col xs={12} md={8}>
           {'movies' in post ? <MovieDetails post={post["movies"][0]}/>: ""}
           {'shows' in post ? <ShowDetails post={post["shows"][0]} seasons={post["seasons"]} episodes={post["episodes"]} />: ""}
+          {'episodes' in post ? <EpisodeDetails post={post["episodes"][0]}/>: ""}
           {'books' in post ? <BookDetails post={post["books"][0]}/>: ""}
           {'games' in post ? <GameDetails post={post["games"][0]}/>: ""}
           {'people' in post ? <PersonDetails post={post["people"][0]}/>: ""}

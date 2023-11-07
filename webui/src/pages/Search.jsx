@@ -8,6 +8,7 @@ import { GameCard } from '../components/ResultsGame';
 import { PersonCard } from '../components/ResultsPerson';
 import { CompanyCard } from '../components/ResultsCompany';
 import { GroupCard } from '../components/ResultsGroup';
+import { EpisodeCard } from '../components/ResultsEpisode';
 // import "./styles.css";
 
 
@@ -312,6 +313,9 @@ function Search() {
             </Row>
             <h2>Shows</h2><Row>
             {shows.map(post => ( <ShowCard post={post}/>))}
+            </Row>
+            <h2>Episodes</h2><Row>
+            {episodes.map(post => ( <EpisodeCard post={post}/>))}
             </Row>
             <h2>Books</h2><Row>
             {books.map(post => ( <BookCard post={post}/>))}
