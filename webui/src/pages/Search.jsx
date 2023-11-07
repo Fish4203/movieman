@@ -1,8 +1,13 @@
 import { Button, Container, Card, Row, Col, Form, ToggleButton, OverlayTrigger, Tooltip, InputGroup } from 'react-bootstrap';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import {Result} from '../components/Results';
 import { MovieCard } from "../components/ResultsMovie";
+import { ShowCard } from '../components/ResultsShow';
+import { BookCard } from '../components/ResultsBook';
+import { GameCard } from '../components/ResultsGame';
+import { PersonCard } from '../components/ResultsPerson';
+import { CompanyCard } from '../components/ResultsCompany';
+import { GroupCard } from '../components/ResultsGroup';
 // import "./styles.css";
 
 
@@ -306,25 +311,22 @@ function Search() {
             {movies.map(post => ( <MovieCard post={post}/>))}
             </Row>
             <h2>Shows</h2><Row>
-            {shows.map(post => ( <Result post={post}/>))}
-            </Row>
-            <h2>Episodes</h2><Row>
-            {episodes.map(post => ( <Result post={post}/>))}
+            {shows.map(post => ( <ShowCard post={post}/>))}
             </Row>
             <h2>Books</h2><Row>
-            {books.map(post => ( <Result post={post}/>))}
+            {books.map(post => ( <BookCard post={post}/>))}
             </Row>
             <h2>Games</h2><Row>
-            {games.map(post => ( <Result post={post}/>))}
+            {games.map(post => ( <GameCard post={post}/>))}
             </Row>
             <h2>People</h2><Row>
-            {people.map(post => ( <Result post={post}/>))}
+            {people.map(post => ( <PersonCard post={post}/>))}
             </Row>
             <h2>Companies</h2><Row>
-            {companies.map(post => ( <Result post={post}/>))}
+            {companies.map(post => ( <CompanyCard post={post}/>))}
             </Row>
             <h2>Collections</h2><Row>
-            {groups.map(post => ( <Result post={post}/>))}
+            {groups.map(post => ( <GroupCard post={post}/>))}
             </Row>
             
 

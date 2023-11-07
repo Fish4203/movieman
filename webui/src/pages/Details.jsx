@@ -3,6 +3,12 @@ import axios from 'axios';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { MovieDetails } from "../components/ResultsMovie";
+import { ShowDetails } from "../components/ResultsShow";
+import { BookDetails } from "../components/ResultsBook";
+import { GameDetails } from "../components/ResultsGame";
+import { PersonDetails } from "../components/ResultsPerson";
+import { CompanyDetails } from "../components/ResultsCompany";
+import { GroupDetails } from "../components/ResultsGroup";
 
 
 
@@ -95,6 +101,12 @@ function Details() {
       <Row>
         <Col xs={12} md={8}>
           {'movies' in post ? <MovieDetails post={post["movies"][0]}/>: ""}
+          {'shows' in post ? <ShowDetails post={post["shows"][0]} seasons={post["seasons"]} episodes={post["episodes"]} />: ""}
+          {'books' in post ? <BookDetails post={post["books"][0]}/>: ""}
+          {'games' in post ? <GameDetails post={post["games"][0]}/>: ""}
+          {'people' in post ? <PersonDetails post={post["people"][0]}/>: ""}
+          {'companies' in post ? <CompanyDetails post={post["companies"][0]}/>: ""}
+          {'groups' in post ? <GroupDetails post={post["groups"][0]}/>: ""}
         </Col>
         <Col xs={12} md={4}>
         <Card>
