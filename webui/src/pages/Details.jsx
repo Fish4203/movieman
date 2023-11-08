@@ -70,12 +70,34 @@ function Details() {
 
       async function update() {
         let urls = [];
-        let typeChar = ""
+        let typeChar = "";
+        let key = "";
         if (type == "movie") {
           typeChar = "m";
+          key = "movies";
+        } else if (type == "show") {
+          typeChar = "s";
+          key = "shows";
+        } else if (type == "book") {
+          typeChar = "b";
+          key = "books";
+        } else if (type == "game") {
+          typeChar = "v";
+          key = "games";
+        } else if (type == "person") {
+          typeChar = "p";
+          key = "people";
+        } else if (type == "company") {
+          typeChar = "c";
+          key = "companies";
+        } else if (type == "group") {
+          typeChar = "g";
+          key = "group";
         }
 
-        let extids = post[Object.keys(post)[0]][0].externalIds;
+        let extids = post[key][0].externalIds;
+
+        console.log(prov);
 
         prov.map((provi) => {
           if (provi.enabled && provi.types.includes(typeChar)) {
@@ -93,22 +115,41 @@ function Details() {
         }));
     
         window.location.reload(false);
+      }
+
+
+
+    const renderDetails = () => {
+      if ('people' in post) {
+        return <PersonDetails post={post["people"][0]} movies={post.movies} shows={post.shows} books={post.books} games={post.games} />
+      } else if ('companies' in post) {
+        return <CompanyDetails post={post["companies"][0]} movies={post.movies} shows={post.shows} books={post.books} games={post.games} />
+      } else if ('groups' in post) {
+        return <GroupDetails post={post["groups"][0]} movies={post.movies} shows={post.shows} books={post.books} games={post.games} />
+      } else if ('movies' in post) {
+        return <MovieDetails post={post["movies"][0]}/>
+      } else if ('shows' in post) {
+        if ('seasons' in post) {
+          return <ShowDetails post={post["shows"][0]} seasons={post["seasons"]} episodes={post["episodes"]} />
         }
-    
+        return <ShowDetails post={post["shows"][0]} />
+      } else if ('episodes' in post) {
+        return <EpisodeDetails post={post["episodes"][0]}/>
+      } else if ('books' in post) {
+        return <BookDetails post={post["books"][0]}/>
+      } else if ('games' in post) {
+        return <GameDetails post={post["games"][0]}/>
+      } else {
+        return <p>Error couldnt identify media type</p>
+      }
+    }
 
     return (
     <Container>
       <br />
       <Row>
         <Col xs={12} md={8}>
-          {'movies' in post ? <MovieDetails post={post["movies"][0]}/>: ""}
-          {'shows' in post ? <ShowDetails post={post["shows"][0]} seasons={post["seasons"]} episodes={post["episodes"]} />: ""}
-          {'episodes' in post ? <EpisodeDetails post={post["episodes"][0]}/>: ""}
-          {'books' in post ? <BookDetails post={post["books"][0]}/>: ""}
-          {'games' in post ? <GameDetails post={post["games"][0]}/>: ""}
-          {'people' in post ? <PersonDetails post={post["people"][0]}/>: ""}
-          {'companies' in post ? <CompanyDetails post={post["companies"][0]}/>: ""}
-          {'groups' in post ? <GroupDetails post={post["groups"][0]}/>: ""}
+          {renderDetails()}
         </Col>
         <Col xs={12} md={4}>
         <Card>

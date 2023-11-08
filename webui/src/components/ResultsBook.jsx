@@ -5,7 +5,7 @@ function BookCard(post) {
     const navigate = useNavigate();
     post = post.post;
     return (
-    <Card onClick={() => navigate('/details/movie/'+ post.id)} className='m-1 p-0' style={{ width: '18rem' }}>
+    <Card onClick={() => navigate('/details/book/'+ post.id)} className='m-1 p-0' style={{ width: '18rem' }}>
         <Card.Img variant="top" src={'images' in post ? post.images[0] : "https://placehold.co/200x100"} />
         <Card.Body>
             <Card.Title>{'title' in post ? post.title : post.name}</Card.Title>

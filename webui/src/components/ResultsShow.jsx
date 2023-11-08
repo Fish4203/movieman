@@ -6,7 +6,7 @@ function ShowCard(post) {
     const navigate = useNavigate();
     post = post.post;
     return (
-    <Card onClick={() => navigate('/details/movie/'+ post.id)} className='m-1 p-0' style={{ width: '18rem' }}>
+    <Card onClick={() => navigate('/details/show/'+ post.id)} className='m-1 p-0' style={{ width: '18rem' }}>
         <Card.Img variant="top" src={'images' in post ? post.images[0] : "https://placehold.co/200x100"} />
         <Card.Body>
             <Card.Title>{'title' in post ? post.title : post.name}</Card.Title>
@@ -16,14 +16,16 @@ function ShowCard(post) {
         </Card.Body>
         <Card.Footer>
             Release date: {post.date}
-            {'length' in post ? <>Length: {post.length}</> : ""}
+            {'length' in post ? <>Seasons: {post.seasons}</> : ""}
         </Card.Footer>
     </Card>
     );
 }
 
-function ShowDetails(post) {
-    post = post.post;
+function ShowDetails(args) {
+    const post = args.post;
+    const seasons = args.seasons;
+    const episodes = args.episodes;
     return (
     <div>
         <h2>{post.title}</h2>
@@ -61,9 +63,7 @@ function ShowDetails(post) {
         >
             <Tab eventKey="other" title="Other facts">
                 <p>Relese date: {post.date}</p>
-                {'budget' in post ? <p>Budget: ${post.budget}</p> : ""}
-                {'length' in post ? <p>Length: {post.length} min</p> : ""}
-                {'rating' in post ? <p>Age Rating: {post.rating}</p> : ""}
+                {'length' in post ? <p>Seasons: {post.seasons} min</p> : ""}
                 {'info' in post ? <Button variant="info" href={post.info}>Info</Button>: ""}
             </Tab>
             {'reviews' in post ? <div>
@@ -96,6 +96,25 @@ function ShowDetails(post) {
                 </Tab>
             : <Tab eventKey="externalIds" title="External Ids" disabled></Tab>}
         </Tabs>
+
+        {seasons != null ? 
+        <Tabs 
+        id="tabsSeason"
+        className="mb-3">
+            {seasons.map(season => 
+            <Tab eventKey={season.seasonId} title={season.seasonId}>
+                <p>Relese Date: {season.date}</p>
+                <p>Description: {season.description}</p>
+
+                <ul>
+                    {episodes.map(episode => (
+                        <>{episode.seasonId == season.seasonId ? <li>{episode.title}</li> : ""}</>
+                    ))}
+                </ul>
+            </Tab>
+            )}
+        </Tabs>
+        : ""}
 
 
     </div>

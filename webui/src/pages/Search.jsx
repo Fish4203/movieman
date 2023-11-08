@@ -130,28 +130,44 @@ function Search() {
       // console.log(response.data)
       if (response.data.movies != null) {
         setMovies(response.data.movies);
+      } else {
+        setMovies([]);
       }
 
       if (response.data.shows != null) {
         setShows(response.data.shows);
+      } else {
+        setShows([]);
       }
       if (response.data.episodes != null) {
         setEpisodes(response.data.episodes);
+      } else {
+        setEpisodes([]);
       }
       if (response.data.books != null) {
         setBooks(response.data.books);
+      } else {
+        setBooks([]);
       }
       if (response.data.Games != null) {
         setGames(response.data.Games);
+      } else {
+        setGames([]);
       }
       if (response.data.people != null) {
         setPeople(response.data.people);
+      } else {
+        setPeople([]);
       }
       if (response.data.companies != null) {
         setCompanies(response.data.companies);
+      } else {
+        setCompanies([]);
       }
       if (response.data.groups != null) {
         setGroups(response.data.groups);
+      } else {
+        setGroups([]);
       }
         // setData(response.data);
     })
