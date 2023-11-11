@@ -13,7 +13,7 @@ func Routes(router *gin.Engine) {
 	router.GET("/TMDB/show/:showId", controllers.TMDBShowDetails())
 	router.GET("/TMDB/person/:personId", controllers.TMDBPersonDetails())
 	// router.GET("/TMDB/company/:Id", controllers.TMDBCompanyDetails())
-	router.GET("/TMDB/collection/:Id", controllers.TMDBCollectionDetails())
+	router.GET("/TMDB/group/:Id", controllers.TMDBCollectionDetails())
 	// search
 	router.GET("/TMDB/search", controllers.TMDBSearch())
 	router.GET("/TMDB/popluar", controllers.TMDBPopular())

@@ -29,6 +29,9 @@ func JsonRequestGet(url string, header string) (map[string]interface{}, error) {
 	}
 	// fmt.Println(res.Status)
 
+	if res.StatusCode != 200 {
+		return jsonResponse, fmt.Errorf(res.Status + "problem contacting the movie database")
+	}
 	// reader, err := gzip.NewReader(res.Body)
 	// if err != nil {
 	// 	panic(err)

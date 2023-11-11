@@ -10,6 +10,7 @@ func GetMediaRoute(router *gin.Engine) {
 	//detailes
 	router.GET("/media/movie/:movieId", controllers.MovieDetails())
 	router.GET("/media/show/:showId", controllers.ShowDetails())
+	router.GET("/media/episode/:showId/:seasonId/:episodeId", controllers.EpisodeDetails())
 	router.GET("/media/book/:Id", controllers.BookDetails())
 	router.GET("/media/game/:Id", controllers.GameDetails())
 	router.GET("/media/person/:personId", controllers.PersonDetails())

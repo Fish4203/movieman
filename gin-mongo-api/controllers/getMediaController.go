@@ -3,6 +3,7 @@ package controllers
 import (
 	"gin-mongo-api/models"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -125,6 +126,47 @@ func ShowDetails() gin.HandlerFunc {
 		}
 
 		episodes, err := models.FindShowEpisode(bson.D{{"showId", objId}})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, map[string]interface{}{"shows": show, "seasons": seasons, "episodes": episodes})
+	}
+}
+
+func EpisodeDetails() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		showId := c.Param("showId")
+		seasonId, err := strconv.Atoi(c.Param("seasonId"))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+		episodeId, err := strconv.Atoi(c.Param("episodeId"))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+		objId, err := primitive.ObjectIDFromHex(showId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+
+		show, err := models.FindShow(bson.D{{"_id", objId}})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+
+		seasons, err := models.FindShowSeason(bson.D{{"showId", objId}, {"seasonId", seasonId}})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			return
+		}
+
+		episodes, err := models.FindShowEpisode(bson.D{{"showId", objId}, {"seasonId", seasonId}, {"episodeId", episodeId}})
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
 			return

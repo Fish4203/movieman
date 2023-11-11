@@ -211,7 +211,7 @@ func TMDBPopular() gin.HandlerFunc {
 		var err error
 		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/trending/all/week?language=en-US", "Bearer "+os.Getenv("TMDB"))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error(), "json": json})
 			return
 		}
 
@@ -269,7 +269,7 @@ func TMDBMovieDetails() gin.HandlerFunc {
 		query := strings.Replace(c.Param("movieId"), " ", "%20", -1)
 		result, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/movie/"+query+"?language=en-US", "Bearer "+os.Getenv("TMDB"))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error(), "json": result})
 			return
 		}
 
@@ -298,7 +298,7 @@ func TMDBPersonDetails() gin.HandlerFunc {
 		query := strings.Replace(c.Param("personId"), " ", "%20", -1)
 		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/person/"+query+"?append_to_response=combined_credits&language=en-US", "Bearer "+os.Getenv("TMDB"))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error(), "json": json})
 			return
 		}
 
@@ -350,9 +350,9 @@ func TMDBPersonDetails() gin.HandlerFunc {
 func TMDBCollectionDetails() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		query := strings.Replace(c.Param("Id"), " ", "%20", -1)
-		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/collection/"+query+"&language=en-US", "Bearer "+os.Getenv("TMDB"))
+		json, err := middleware.JsonRequestGet("https://api.themoviedb.org/3/collection/"+query+"?language=en-US", "Bearer "+os.Getenv("TMDB"))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error(), "json": json})
 			return
 		}
 
@@ -427,6 +427,7 @@ func TMDBShowDetails() gin.HandlerFunc {
 			var season models.ShowSeason
 			decoder(seasonResult, &season)
 			season.Images = imageHelper(seasonResult)
+			season.Episodes = len(seasonResult["episodes"].([]interface{}))
 
 			seasons = append(seasons, season)
 			episodeResults := seasonResult["episodes"].([]interface{})

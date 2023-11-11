@@ -22,7 +22,7 @@ type Show struct {
 type ShowSeason struct {
 	ShowId      primitive.ObjectID `json:"showId"                 bson:"showId,omitempty"                              validate:"required"`
 	SeasonID    int                `json:"seasonId"               bson:"seasonId,omitempty"    tmdb:"season_number"    validate:"required"`
-	Episodes    int                `json:"episodes"               bson:"episodes,omitempty"    tmdb:"episodes"         validate:"required"`
+	Episodes    int                `json:"episodes"               bson:"episodes,omitempty"    tmdb:"episode_count"         validate:"required"`
 	Description string             `json:"description"            bson:"description,omitempty" tmdb:"overview"         validate:"required"`
 	Date        string             `json:"date,omitempty"         bson:"date,omitempty"        tmdb:"air_date"         validate:"required"`
 	Images      []string           `json:"images,omitempty"       bson:"images,omitempty"`
