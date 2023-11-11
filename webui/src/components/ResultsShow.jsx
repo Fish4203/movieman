@@ -23,6 +23,7 @@ function ShowCard(post) {
 }
 
 function ShowDetails(args) {
+    const navigate = useNavigate();
     const post = args.post;
     const seasons = args.seasons;
     const episodes = args.episodes;
@@ -32,6 +33,7 @@ function ShowDetails(args) {
         
         <Container >
 
+        {'images' in post ? 
         <Carousel >
             {post.images.map(image => (
                 <Carousel.Item >
@@ -42,6 +44,7 @@ function ShowDetails(args) {
                 </Carousel.Item>
             ))}
         </Carousel>
+        : <p>No images found</p>}
         </Container>
         {'genre' in post ? <div>
             <Stack direction="horizontal" gap={2} className='m-3'>
@@ -88,11 +91,13 @@ function ShowDetails(args) {
 
             {'externalIds' in post ? 
                 <Tab eventKey="externalIds" title="External Ids" >
+                    {'externalIds' in post ? 
                     <ul>
                         {Object.keys(post.externalIds).map(obj =>
                             (<li>{obj}: {post.externalIds[obj]}</li>)
                         )}
                     </ul>
+                    : <p>No external ids</p>}
                 </Tab>
             : <Tab eventKey="externalIds" title="External Ids" disabled></Tab>}
         </Tabs>
@@ -108,7 +113,7 @@ function ShowDetails(args) {
 
                 <ul>
                     {episodes.map(episode => (
-                        <>{episode.seasonId == season.seasonId ? <li>{episode.title}</li> : ""}</>
+                        <>{episode.seasonId == season.seasonId ? <li > <a onClick={() => {navigate('/details/episode/'+ post.id + "_" + episode.seasonId + '_' + episode.episodeId); navigate(0);}}>{episode.title}</a></li> : ""}</>
                     ))}
                 </ul>
             </Tab>

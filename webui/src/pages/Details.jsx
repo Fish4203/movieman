@@ -54,7 +54,7 @@ function Details() {
 
 
     useEffect(() => {
-        axios.get(import.meta.env.VITE_BACKEND + '/media/' + type + "/" + id)
+        axios.get(import.meta.env.VITE_BACKEND + '/media/' + type + "/" + id.replaceAll("_", "/"))
         .then(function (response) {
           // handle success
           // console.log(response.data)
@@ -92,12 +92,12 @@ function Details() {
           key = "companies";
         } else if (type == "group") {
           typeChar = "g";
-          key = "group";
+          key = "groups";
         }
 
+        console.log(key);
         let extids = post[key][0].externalIds;
 
-        console.log(prov);
 
         prov.map((provi) => {
           if (provi.enabled && provi.types.includes(typeChar)) {
@@ -128,13 +128,13 @@ function Details() {
         return <GroupDetails post={post["groups"][0]} movies={post.movies} shows={post.shows} books={post.books} games={post.games} />
       } else if ('movies' in post) {
         return <MovieDetails post={post["movies"][0]}/>
-      } else if ('shows' in post) {
+      } else if ('shows' in post && 'show' === type) {
         if ('seasons' in post) {
           return <ShowDetails post={post["shows"][0]} seasons={post["seasons"]} episodes={post["episodes"]} />
         }
         return <ShowDetails post={post["shows"][0]} />
       } else if ('episodes' in post) {
-        return <EpisodeDetails post={post["episodes"][0]}/>
+        return <EpisodeDetails post={post["episodes"][0]} show={post["shows"][0]} season={post["seasons"][0]} />
       } else if ('books' in post) {
         return <BookDetails post={post["books"][0]}/>
       } else if ('games' in post) {

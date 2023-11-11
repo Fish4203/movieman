@@ -14,22 +14,24 @@ function GroupCard(post) {
                 {post.description.length > 250 ? `${post.description.substring(0, 250)}...` : post.description}
             </Card.Text>
         </Card.Body>
-        <Card.Footer>
-            Release date: {post.date}
-            {'length' in post ? <>Length: {post.length}</> : ""}
-        </Card.Footer>
     </Card>
     );
 }
 
-function GroupDetails(post) {
-    post = post.post;
+function GroupDetails(args) {
+    const navigate = useNavigate();
+    const post = args.post;
+    const movies = args.movies;
+    const shows = args.shows;
+    const books = args.books;
+    const games = args.games;
     return (
     <div>
         <h2>{post.title}</h2>
         
         <Container >
 
+        {'images' in post ? 
         <Carousel >
             {post.images.map(image => (
                 <Carousel.Item >
@@ -40,6 +42,7 @@ function GroupDetails(post) {
                 </Carousel.Item>
             ))}
         </Carousel>
+        : <p>No images found</p>}
         </Container>
         {'genre' in post ? <div>
             <Stack direction="horizontal" gap={2} className='m-3'>
@@ -52,47 +55,60 @@ function GroupDetails(post) {
         </div>: ""}
         <h3>Description</h3>
         <p>{post.description}</p>
+        {'info' in post ? <Button variant="info" href={post.info}>Info</Button>: ""}
         <br />
 
         <Tabs
-        defaultActiveKey="other"
+        defaultActiveKey="movies"
         id="uncontrolled-tab-example"
         className="mb-3"
         >
-            <Tab eventKey="other" title="Other facts">
-                <p>Relese date: {post.date}</p>
-                {'budget' in post ? <p>Budget: ${post.budget}</p> : ""}
-                {'length' in post ? <p>Length: {post.length} min</p> : ""}
-                {'rating' in post ? <p>Age Rating: {post.rating}</p> : ""}
-                {'info' in post ? <Button variant="info" href={post.info}>Info</Button>: ""}
+            <Tab eventKey="movies" title="Movies">
+                {movies != null ? 
+                <ul>
+                    {movies.map(movie => (
+                        <li ><a onClick={() => {navigate('/details/movie/'+ movie.id); navigate(0);}}>{movie.title}</a></li>
+                    ))}
+                </ul>
+                : <p>No movies found</p>}
             </Tab>
-            {'reviews' in post ? <div>
-                <Tab eventKey="Reviews" title="Reviews" >
-                    <ul>
-                        {Object.keys(post.reviews).map(obj =>
-                            (<li>{obj}: {post.reviews[obj]}</li>)
-                        )}
-                    </ul>
+            <Tab eventKey="shows" title="Shows">
+                {shows != null ? 
+                <ul>
+                    {shows.map(show => (
+                        <li onClick={() => {navigate('/details/show/'+ show.id); navigate(0);}}>{show.title}</li>
+                    ))}
+                </ul>
+                : <p>No shows found</p>}
+            </Tab>
+            <Tab eventKey="books" title="Books">
+                {books != null ? 
+                <ul>
+                    {books.map(book => (
+                        <li onClick={() => {navigate('/details/book/'+ book.id); navigate(0);}}>{book.title}</li>
+                    ))}
+                </ul>
+                : <p>No books found</p>}
+            </Tab>
+            <Tab eventKey="games" title="Games">
+                {games != null ? 
+                <ul>
+                    {games.map(game => (
+                        <li onClick={() => {navigate('/details/game/'+ game.id); navigate(0);}}>{game.title}</li>
+                    ))}
+                </ul>
+                : <p>No games found</p>}
                 </Tab>
-            </div>: <Tab eventKey="Reviews" title="Reviews" disabled></Tab>}
-
-            {'platforms' in post ? <div>
-                <Tab eventKey="Platforms" title="Platforms">
-                    <ul>
-                        {post.platforms.map(obj =>
-                            (<li>{obj}</li>)
-                        )}
-                    </ul>
-                </Tab>
-            </div>: <Tab eventKey="Platforms" title="Platforms" disabled></Tab>}
 
             {'externalIds' in post ? 
                 <Tab eventKey="externalIds" title="External Ids" >
+                    {'externalIds' in post ? 
                     <ul>
                         {Object.keys(post.externalIds).map(obj =>
                             (<li>{obj}: {post.externalIds[obj]}</li>)
                         )}
                     </ul>
+                    : <p>No external ids</p>}
                 </Tab>
             : <Tab eventKey="externalIds" title="External Ids" disabled></Tab>}
         </Tabs>

@@ -16,13 +16,14 @@ function PersonCard(post) {
         </Card.Body>
         <Card.Footer>
             Release date: {post.date}
-            {'length' in post ? <>Title: {post.role}</> : ""}
+            {'role' in post ? <>Title: {post.role}</> : ""}
         </Card.Footer>
     </Card>
     );
 }
 
 function PersonDetails(args) {
+    const navigate = useNavigate();
     const post = args.post;
     const movies = args.movies;
     const shows = args.shows;
@@ -59,6 +60,7 @@ function PersonDetails(args) {
         <h3>Description</h3>
         <p>{post.description}</p>
         <p>Date of birth: {post.date}</p>
+        {'role' in post ? <p>Job title: {post.role}</p> : ""}
         <br />
 
         <Tabs
@@ -70,7 +72,7 @@ function PersonDetails(args) {
                 {movies != null ? 
                 <ul>
                     {movies.map(movie => (
-                        <li>{movie.title}</li>
+                        <li ><a onClick={() => {navigate('/details/movie/'+ movie.id); navigate(0);}}>{movie.title}</a></li>
                     ))}
                 </ul>
                 : <p>No movies found</p>}
@@ -79,7 +81,7 @@ function PersonDetails(args) {
                 {shows != null ? 
                 <ul>
                     {shows.map(show => (
-                        <li>{show.title}</li>
+                        <li onClick={() => {navigate('/details/show/'+ show.id); navigate(0);}}>{show.title}</li>
                     ))}
                 </ul>
                 : <p>No shows found</p>}
@@ -88,7 +90,7 @@ function PersonDetails(args) {
                 {books != null ? 
                 <ul>
                     {books.map(book => (
-                        <li>{book.title}</li>
+                        <li onClick={() => {navigate('/details/book/'+ book.id); navigate(0);}}>{book.title}</li>
                     ))}
                 </ul>
                 : <p>No books found</p>}
@@ -97,7 +99,7 @@ function PersonDetails(args) {
                 {games != null ? 
                 <ul>
                     {games.map(game => (
-                        <li>{game.title}</li>
+                        <li onClick={() => {navigate('/details/game/'+ game.id); navigate(0);}}>{game.title}</li>
                     ))}
                 </ul>
                 : <p>No games found</p>}
@@ -105,11 +107,13 @@ function PersonDetails(args) {
 
             {'externalIds' in post ? 
                 <Tab eventKey="externalIds" title="External Ids" >
+                    {'externalIds' in post ? 
                     <ul>
                         {Object.keys(post.externalIds).map(obj =>
                             (<li>{obj}: {post.externalIds[obj]}</li>)
                         )}
                     </ul>
+                    : <p>No external ids</p>}
                 </Tab>
             : <Tab eventKey="externalIds" title="External Ids" disabled></Tab>}
         </Tabs>

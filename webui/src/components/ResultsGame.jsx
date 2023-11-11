@@ -28,6 +28,7 @@ function GameDetails(post) {
         
         <Container >
 
+        {'images' in post ? 
         <Carousel >
             {post.images.map(image => (
                 <Carousel.Item >
@@ -38,6 +39,7 @@ function GameDetails(post) {
                 </Carousel.Item>
             ))}
         </Carousel>
+        : <p>No images found</p>}
         </Container>
         {'genre' in post ? <div>
             <Stack direction="horizontal" gap={2} className='m-3'>
@@ -92,11 +94,13 @@ function GameDetails(post) {
 
             {'externalIds' in post ? 
                 <Tab eventKey="externalIds" title="External Ids" >
+                    {'externalIds' in post ? 
                     <ul>
                         {Object.keys(post.externalIds).map(obj =>
                             (<li>{obj}: {post.externalIds[obj]}</li>)
                         )}
                     </ul>
+                    : <p>No external ids</p>}
                 </Tab>
             : <Tab eventKey="externalIds" title="External Ids" disabled></Tab>}
         </Tabs>
