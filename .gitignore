@@ -6,3 +6,5 @@ gin-mongo-api/.env
 movieman.sublime-workspace
 movieman.sublime-project
 README.sublime-workspace
+webui/.direnv
+webui/bun.lockb
