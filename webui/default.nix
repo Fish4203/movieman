@@ -14,6 +14,7 @@ pkgs.mkShell {
     pkgs.hello
     pkgs.bun
     nodejs
-  ];
+    pkgs.nodePackages.typescript-language-server 
+ ];
 }
 
