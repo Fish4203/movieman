@@ -1,48 +1,33 @@
 package configs
 
 import (
-    "context"
-    "fmt"
-    "log"
-    "time"
-    "os"
-    "github.com/joho/godotenv"
-    // "go.mongodb.org/mongo-driver/bson"
-    "go.mongodb.org/mongo-driver/mongo"
-    "go.mongodb.org/mongo-driver/mongo/options"
+	"context"
+	"fmt"
+	"gin-mongo-api/models"
+	"log"
+	"os"
+	"time"
+
+	"github.com/joho/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
-func InitClient() *mongo.Client  {
-    err := godotenv.Load()
-    if err != nil {
-        log.Fatal("Error loading .env file")
-    }
+func InitClient() (*gorm.DB)   {
+  err := godotenv.Load()
+  if err != nil {
+    log.Fatal("Error loading .env file")
+  }
 
-    client, err := mongo.NewClient(options.Client().ApplyURI(os.Getenv("MONGOURI")))
-    if err != nil {
-        log.Fatal(err)
-    }
+  db, err := gorm.Open(postgres.New(postgres.Config{
+    DSN: fmt.Sprintf("user=apiClient password=%s dbname=movieman host=%s port=9432 sslmode=disable TimeZone=Asia/Shanghai", os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOST")),
+    PreferSimpleProtocol: true, // disables implicit prepared statement usage
+  }), &gorm.Config{})
+  if err != nil {
+    log.Fatal("Error loading db")
+  }
 
-    ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-    err = client.Connect(ctx)
-    if err != nil {
-        log.Fatal(err)
-    }
+  db.AutoMigrate(&models.User{}, &models.Movie{}, &models.MovieExternal{}, &models.MovieReview{})
 
-    //ping the database
-    err = client.Ping(ctx, nil)
-    if err != nil {
-        log.Fatal(err)
-    }
-    fmt.Println("Connected to MongoDB")
-    return client
+  return db
 }
-//getting database collections
-func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-    fmt.Println(collectionName)
-    collection := client.Database("movieman").Collection(collectionName)
-    return collection
-}
-
-//Client instance
-var DB *mongo.Client = InitClient()

@@ -1,81 +1,42 @@
 package models
 
 import (
-    "time"
-    "context"
-    "gin-mongo-api/configs"
-    // "github.com/go-playground/validator/v10"
-    "go.mongodb.org/mongo-driver/mongo"
-    // "go.mongodb.org/mongo-driver/mongo/options"
-    "go.mongodb.org/mongo-driver/bson"
-    "go.mongodb.org/mongo-driver/bson/primitive"
+  "gorm.io/gorm"
 )
 
 
 type Movie struct {
-    Id          primitive.ObjectID      `json:"id,omitempty"           bson:"_id,omitempty"         `
-    // basic info
-    Title       string                  `json:"title"                  bson:"title,omitempty"       validate:"required"`
-    Description string                  `json:"description"            bson:"description,omitempty" validate:"required"`
-    Date        string                  `json:"date,omitempty"         bson:"date,omitempty"        validate:"required"`
-    Genre       []string                `json:"genre,omitempty"        bson:"genre,omitempty"       `
-    Info        string                  `json:"info,omitempty"         bson:"info,omitempty"        `
-    Budget      int                     `json:"budget,omitempty"       bson:"budget,omitempty"      `
-    Length      int                     `json:"length,omitempty"       bson:"length,omitempty"      `
-    Rating      string                  `json:"rating,omitempty"       bson:"rating,omitempty"      `
-    // pupularity
-    Reviews     map[string]string       `json:"reviews,omitempty"      bson:"reviews,omitempty" `
-    // related media
-    Images      []string                `json:"images,omitempty"       bson:"images,omitempty"      `
-    // ids
-    ExternalIds map[string]string       `json:"externalIds,omitempty"  bson:"externalIds,omitempty" `
-    Platforms   []string                `json:"platforms,omitempty"    bson:"platforms,omitempty"   `
+  gorm.Model
+  // basic info
+  Title         string            `json:"title"             gorm:"not null"`
+  Date          string            `json:"date"              gorm:"not null"`
+  Budget        uint              `json:"budget,omitempty"`
+  Length        uint              `json:"length,omitempty"`
+  Rating        string            `json:"rating,omitempty"`
+  ExternalInfo  []MovieExternal   
+  Review        []MovieReview
 }
 
-var movieCollection *mongo.Collection = configs.GetCollection(configs.DB, "movie")
+type MovieExternal struct {
+  gorm.Model
+  MovieID           uint
+  DataProviderID    uint
 
-func WriteMovie(models []Movie) error {
-    if len(models) == 0 {
-        return nil
-    }
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+  ExternalPlatform  string    `json:"external_platform"       gorm:"not null"`
 
-    var writeObjs []mongo.WriteModel 
-	for i := 0; i < len(models); i++ {
-        updateModel := mongo.NewUpdateOneModel()
-        updateModel.SetFilter(bson.M{"title": models[i].Title, "date": models[i].Date}) 
-        updateModel.SetUpdate(bson.D{{"$set", models[i]}})
-        updateModel.SetUpsert(true)
-
-		writeObjs = append(writeObjs, updateModel)
-	}
-	
-    _, err := movieCollection.BulkWrite(ctx, writeObjs)
-
-    return err
+  Genre             []string  `json:"genre,omitempty"`
+  Description       string    `json:"description,omitempty"`
+  ReviewScore       string    `json:"review_score,omitempty"` 
+  Platforms         []string  `json:"platforms,omitempty"`
+  Links             []string  `json:"links,omitempty"`
 }
 
+type MovieReview struct {
+  gorm.Model
+  UserID        uint
+  MovieID       uint
 
-func FindMovie(filter bson.D) ([]Movie, error) {
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    var movies []Movie
-    defer cancel()
-
-    results, err := movieCollection.Find(ctx, filter)
-    if err != nil {
-        return movies, err
-    }
-
-    //reading from the db in an optimal way
-    defer results.Close(ctx)
-    for results.Next(ctx) {
-        var singleMovie Movie
-        if err = results.Decode(&singleMovie); err != nil {
-            return movies, err
-        }
-        movies = append(movies, singleMovie)
-    }
-
-    return movies, nil
+  WatchPercent  uint
+  Rating        uint
+  Notes         string
 }
