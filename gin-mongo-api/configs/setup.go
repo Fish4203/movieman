@@ -1,19 +1,22 @@
 package configs
 
 import (
-	"context"
 	"fmt"
 	"gin-mongo-api/models"
 	"log"
 	"os"
-	"time"
 
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func InitClient() (*gorm.DB)   {
+  
+func InitDB() {
+  DB.AutoMigrate(&models.User{}, &models.Movie{}, &models.MovieExternal{}, &models.MovieReview{})
+}
+
+func getDB() (*gorm.DB) {
   err := godotenv.Load()
   if err != nil {
     log.Fatal("Error loading .env file")
@@ -27,7 +30,7 @@ func InitClient() (*gorm.DB)   {
     log.Fatal("Error loading db")
   }
 
-  db.AutoMigrate(&models.User{}, &models.Movie{}, &models.MovieExternal{}, &models.MovieReview{})
-
   return db
 }
+
+var DB *gorm.DB = getDB()
