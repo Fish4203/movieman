@@ -20,6 +20,9 @@ type MediaExternal struct {
   UpdatedAt   time.Time
   DeletedAt   gorm.DeletedAt  `             gorm:"index"`
 
+  Title       string      `gorm"not null"`
+  Date        string      `gorm"not null"`
+
   ExternalID        string    `json:"externalId"      gorm:"primaryKey"`
   DataProviderID    uint      `json:"dataProvider"    gorm:"primaryKey"`
   
@@ -35,7 +38,9 @@ type MediaReview struct {
   UpdatedAt   time.Time
   DeletedAt   gorm.DeletedAt  `             gorm:"index"`
 
-  UserID      uint            `json:"user" gorm:"primaryKey"`
+  Title       string          `             gorm:"primaryKey"`
+  Date        string          `             gorm:"primaryKey"`
+  UserID      uint            `json:"user"  gorm:"primaryKey"`
 
   Progress    uint            `json:"progress"`
   Rating      uint            `json:"rating"`

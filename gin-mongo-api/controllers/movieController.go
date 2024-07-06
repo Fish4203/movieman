@@ -1,13 +1,13 @@
 package controllers
 
 import (
+	"encoding/json"
 	"gin-mongo-api/configs"
 	"gin-mongo-api/models"
 	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/internal/json"
 	"gorm.io/gorm/clause"
 )
 
@@ -84,9 +84,14 @@ func DeleteMovie() gin.HandlerFunc {
   }
 }
 
+type bulkMovies struct {
+  Movies        []models.Movie
+  ExternalInfo  []models.MovieExternal
+}
+
 func BulkMovie() gin.HandlerFunc {
   return func(c *gin.Context) {
-    var movieExternals []models.MovieExternal
+    var bulkMovies bulkMovies
 
     body, err := io.ReadAll(c.Request.Body)
     if err != nil {
@@ -94,29 +99,24 @@ func BulkMovie() gin.HandlerFunc {
       return
     }
 
-    err = json.Unmarshal(body, &movieExternals)
+    err = json.Unmarshal(body, &bulkMovies)
     if err != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
       return
     }
 
-    var movies []models.Movie
-    for _, element := range movieExternals {
-      movies = append(movies, element.Movie)
-    }
-
-    resultMovie := configs.DB.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&movies)
+    resultMovie := configs.DB.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&bulkMovies.Movies)
     if resultMovie.Error != nil {
       c.JSON(http.StatusNotFound, map[string]interface{}{"error": resultMovie.Error})
        return
     }
 
-    resultExternal := configs.DB.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&movieExternals)
+    resultExternal := configs.DB.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&bulkMovies.ExternalInfo)
     if resultExternal.Error != nil {
       c.JSON(http.StatusNotFound, map[string]interface{}{"error": resultExternal.Error})
        return
     }
 
-    c.JSON(http.StatusCreated, map[string]interface{}{"moviesInserted": resultMovie.RowsAffected, "externalIdsInserted": resultExternal.RowsAffected})
+    c.JSON(http.StatusCreated, map[string]interface{}{"moviesInserted": resultMovie.RowsAffected, "externalInfoInserted": resultExternal.RowsAffected})
   }
 }

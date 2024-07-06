@@ -6,16 +6,14 @@ type Movie struct {
   Budget        uint              `json:"budget"`
   Length        uint              `json:"length"`
   Rating        string            `json:"rating"`
-  ExternalInfo  []MovieExternal   
-  Review        []MovieReview
+  ExternalInfo  []MovieExternal   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"` 
+  Review        []MovieReview     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"` 
 }
 
 type MovieExternal struct {
   MediaExternal
-  Movie   Movie  `json:"movie"  gorm:"not null"`
 }
 
 type MovieReview struct {
   MediaReview
-  Movie   Movie  `json:"movie"    gorm:"not null;primaryKey"`
 }

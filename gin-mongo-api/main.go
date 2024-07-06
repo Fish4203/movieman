@@ -11,7 +11,7 @@ import (
 func main() {
     router := gin.Default()
 
-    configs.InitDB()
+    configs.GetDB()
 
     corsConfig := cors.DefaultConfig()
     corsConfig.AllowOrigins = []string{"*"}
