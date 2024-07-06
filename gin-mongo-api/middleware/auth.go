@@ -12,7 +12,7 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateToken(user_id string) (string, error) {
+func GenerateToken(user_id string, user_role string) (string, error) {
 
 	token_lifespan,err := strconv.Atoi(os.Getenv("TOKEN_HOUR_LIFESPAN"))
 
@@ -23,7 +23,8 @@ func GenerateToken(user_id string) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
 	claims["user_id"] = user_id
-	claims["exp"] = time.Now().Add(time.Hour * time.Duration(token_lifespan)).Unix()
+	claims["role"] = user_role
+  claims["exp"] = time.Now().Add(time.Hour * time.Duration(token_lifespan)).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return token.SignedString([]byte(os.Getenv("API_SECRET")))
@@ -46,6 +47,7 @@ func ExtractToken(c *gin.Context) string {
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("userId", "")
+    c.Set("userRole", "")
 
 		tokenString := ExtractToken(c)
 
@@ -57,11 +59,12 @@ func AuthMiddleware() gin.HandlerFunc {
 		})
 		if err == nil {
 			claims, ok := token.Claims.(jwt.MapClaims)
-			// fmt.Println(claims)
 			if ok && token.Valid {
-				uid, exists := claims["user_id"].(string)
+				userRole, _ := claims["role"].(string)
+        uid, exists := claims["user_id"].(string)
 				if exists {
-					c.Set("userId", uid)
+					c.Set("userRole", userRole)
+          c.Set("userId", uid)
 					c.Next()
 				} else {
 					c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find userid in jwt"})

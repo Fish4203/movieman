@@ -1,182 +1,122 @@
 package controllers
 
 import (
-	"fmt"
 	"gin-mongo-api/configs"
-	"gin-mongo-api/middleware"
 	"gin-mongo-api/models"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/gin-gonic/gin/internal/json"
+	"gorm.io/gorm/clause"
 )
 
-func CreateUser() gin.HandlerFunc {
+func CreateMovie() gin.HandlerFunc {
   return func(c *gin.Context) {
-    var user models.User
+    var movie models.Movie
 
-    //validate the request body
-    if err := c.BindJSON(&user); err != nil {
+    if err := c.BindJSON(&movie); err != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
       return
     }
 
-    password, err := bcrypt.GenerateFromPassword([]byte(user.Password),bcrypt.DefaultCost)
-    if err != nil {
-      c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
-      return
-    }
-    user.Password = string(password)
-
-    if result := configs.DB.Create(&user); result.Error != nil {
+    if result := configs.DB.Create(&movie); result.Error != nil {
       c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": result.Error})
       return
     }
         
-    user.Password = ""
-    c.JSON(http.StatusCreated, map[string]interface{}{"user": user})
+    c.JSON(http.StatusCreated, map[string]interface{}{"movie": movie})
   }
 }
 
-
-
-func GetAUser() gin.HandlerFunc {
+func EditMovie() gin.HandlerFunc {
   return func(c *gin.Context) {
-    userID := c.Param("userId")
-    var user models.User
+    var movie models.Movie
 
-    if result := configs.DB.First(&user, userID); result.Error != nil || result.RowsAffected != 1 {
-      c.JSON(http.StatusNotFound, map[string]interface{}{"error": result.Error})
-       return
-    }
-        
-    user.Password = ""
-    c.JSON(http.StatusOK, map[string]interface{}{"user": user})
-  }
-}
-
-func GetUser() gin.HandlerFunc {
-  return func(c *gin.Context) {
-    userID := c.MustGet("userId").(string)
-    var user models.User
-
-    if result := configs.DB.First(&user, userID); result.Error != nil || result.RowsAffected != 1 {
-      c.JSON(http.StatusNotFound, map[string]interface{}{"error": result.Error})
-       return
-    }
-        
-    user.Password = ""
-    c.JSON(http.StatusOK, map[string]interface{}{"user": user})
-  }
-}
-
-
-func EditAUser() gin.HandlerFunc {
-  return func(c *gin.Context) {
-    var oldUser models.User
-    var newUser models.User
-        
-    //validate the request body
-    if err := c.BindJSON(&newUser); err != nil {
+    if err := c.BindJSON(&movie); err != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
       return
     }
 
-    userID := c.MustGet("userId").(string)
-    if userID == "" {
-      c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt or no jwt sent"})
-      return
-    }
-
-    if result := configs.DB.First(&oldUser, userID); result.Error != nil || result.RowsAffected != 1 {
-      c.JSON(http.StatusNotFound, map[string]interface{}{"error": result.Error})
+    if result := configs.DB.Save(&movie); result.Error != nil {
+      c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": result.Error})
       return
     }
         
-    passwordHash, err := bcrypt.GenerateFromPassword([]byte(newUser.Password),bcrypt.DefaultCost)
+    c.JSON(http.StatusCreated, map[string]interface{}{"movie": movie})
+  }
+}
+
+func GetMovies() gin.HandlerFunc {
+  return func(c *gin.Context) {
+    var movies []models.Movie
+    var movie models.Movie
+
+    if err := c.BindJSON(&movie); err != nil {
+      c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+      return
+    }
+
+    if result := configs.DB.Where(&movie).Find(&movies); result.Error != nil {
+      c.JSON(http.StatusNotFound, map[string]interface{}{"error": result.Error})
+       return
+    }
+        
+    c.JSON(http.StatusOK, map[string]interface{}{"movies": movies})
+  }
+}
+
+func DeleteMovie() gin.HandlerFunc {
+  return func(c *gin.Context) {
+    var movie models.Movie
+
+    if err := c.BindJSON(&movie); err != nil {
+      c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+      return
+    }
+
+    if result := configs.DB.Delete(&movie); result.Error != nil {
+      c.JSON(http.StatusNotFound, map[string]interface{}{"error": result.Error})
+       return
+    }
+    
+    c.JSON(http.StatusOK, map[string]interface{}{"result": "Movie successfully deleted"})
+  }
+}
+
+func BulkMovie() gin.HandlerFunc {
+  return func(c *gin.Context) {
+    var movieExternals []models.MovieExternal
+
+    body, err := io.ReadAll(c.Request.Body)
     if err != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
       return
     }
 
-    oldUser.Password = string(passwordHash)
-    oldUser.Name = newUser.Name
-    oldUser.Email = newUser.Email
-    oldUser.Role = newUser.Role
-    
-    if result := configs.DB.Save(&oldUser); result.Error != nil {
-      c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": result.Error})
-      return
-    }
-
-    oldUser.Password = ""
-    c.JSON(http.StatusOK, map[string]interface{}{"user": oldUser})
-  }
-}
-
-
-func DeleteAUser() gin.HandlerFunc {
-  return func(c *gin.Context) {
-    userID := c.MustGet("userId").(string)
-    if userID == "" {
-      c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt or no jwt sent"})
-      return
-    }
-
-    if result := configs.DB.Delete(&models.User{}, userID); result.Error != nil {
-      c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": result.Error})
-      return
-    }
-    
-    c.JSON(http.StatusOK, map[string]interface{}{"result": "User successfully deleted"})
-  }
-}
-
-func GetAllUsers() gin.HandlerFunc {
-  return func(c *gin.Context) {
-    var users []models.User
-
-    if result := configs.DB.Find(&users); result.Error != nil {
-      c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": result.Error})
-      return
-    }
-    
-    for i := 0; i < len(users); i++ {
-      users[i].Password = ""
-    }
-
-    c.JSON(http.StatusOK, map[string]interface{}{"users": users})
-  }
-}
-
-
-func Login() gin.HandlerFunc {
-  return func(c *gin.Context) {
-    var user models.User
-    var dbUser models.User
-
-    //validate the request body
-    if err := c.BindJSON(&user); err != nil {
+    err = json.Unmarshal(body, &movieExternals)
+    if err != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
       return
     }
 
-    if result := configs.DB.First(&dbUser, "name = ?", user.Name); result.Error != nil || result.RowsAffected != 1 {
-      c.JSON(http.StatusNotFound, map[string]interface{}{"error": result.Error})
-      return
+    var movies []models.Movie
+    for _, element := range movieExternals {
+      movies = append(movies, element.Movie)
     }
 
-    if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password)); err != nil {
-      c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-      return
+    resultMovie := configs.DB.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&movies)
+    if resultMovie.Error != nil {
+      c.JSON(http.StatusNotFound, map[string]interface{}{"error": resultMovie.Error})
+       return
     }
 
-    token, err := middleware.GenerateToken(fmt.Sprint(dbUser.ID))
-    if  err != nil {
-      c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
-      return
+    resultExternal := configs.DB.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&movieExternals)
+    if resultExternal.Error != nil {
+      c.JSON(http.StatusNotFound, map[string]interface{}{"error": resultExternal.Error})
+       return
     }
 
-    c.JSON(http.StatusOK, map[string]interface{}{"token": token})
+    c.JSON(http.StatusCreated, map[string]interface{}{"moviesInserted": resultMovie.RowsAffected, "externalIdsInserted": resultExternal.RowsAffected})
   }
 }

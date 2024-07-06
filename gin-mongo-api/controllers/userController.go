@@ -171,7 +171,7 @@ func Login() gin.HandlerFunc {
       return
     }
 
-    token, err := middleware.GenerateToken(fmt.Sprint(dbUser.ID))
+    token, err := middleware.GenerateToken(fmt.Sprint(dbUser.ID), dbUser.Role)
     if  err != nil {
       c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
       return
