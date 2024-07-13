@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"gin-mongo-api/controllers"
-	"gin-mongo-api/middleware"
+	"backend-mediaman/controllers"
+	"backend-mediaman/middleware"
 
 	"github.com/gin-gonic/gin"
 )

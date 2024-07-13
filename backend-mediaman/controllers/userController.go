@@ -2,9 +2,9 @@ package controllers
 
 import (
 	"fmt"
-	"gin-mongo-api/configs"
-	"gin-mongo-api/middleware"
-	"gin-mongo-api/models"
+	"backend-mediaman/configs"
+	"backend-mediaman/middleware"
+	"backend-mediaman/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -167,13 +167,13 @@ func Login() gin.HandlerFunc {
     }
 
     if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password)); err != nil {
-      c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+      c.JSON(http.StatusInternalServerError, map[string]interface{}{"stage": "password compare", "error": err.Error()})
       return
     }
 
     token, err := middleware.GenerateToken(fmt.Sprint(dbUser.ID), dbUser.Role)
     if  err != nil {
-      c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error()})
+      c.JSON(http.StatusInternalServerError, map[string]interface{}{"stage": "generate token", "error": err.Error()})
       return
     }
 

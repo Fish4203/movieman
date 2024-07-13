@@ -1,4 +1,4 @@
-module gin-mongo-api
+module backend-mediaman
 
 go 1.20
 

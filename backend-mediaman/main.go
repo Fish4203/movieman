@@ -1,8 +1,8 @@
 package main
 
 import (
-    "gin-mongo-api/configs"
-    "gin-mongo-api/routes"
+    "backend-mediaman/configs"
+    "backend-mediaman/routes"
 
     "github.com/gin-contrib/cors"
     "github.com/gin-gonic/gin"
@@ -23,6 +23,7 @@ func main() {
     router.Use(cors.New(corsConfig))
 
     routes.UserRoute(router)
+    routes.MovieRoute(router)
     // routes.GetMediaRoute(router)
     // routes.PostMediaRoute(router)
     // routes.IndexerRoute(router)

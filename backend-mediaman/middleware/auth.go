@@ -28,7 +28,6 @@ func GenerateToken(user_id string, user_role string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return token.SignedString([]byte(os.Getenv("API_SECRET")))
-
 }
 
 func ExtractToken(c *gin.Context) string {

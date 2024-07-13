@@ -2,7 +2,7 @@ package configs
 
 import (
 	"fmt"
-	"gin-mongo-api/models"
+	"backend-mediaman/models"
 	"log"
 	"os"
 

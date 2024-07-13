@@ -2,10 +2,10 @@ package controllers
 
 import (
     // "context"
-    // "gin-mongo-api/configs"
-    // "gin-mongo-api/models"
-    "gin-mongo-api/responses"
-    "gin-mongo-api/middleware"
+    // "backend-mediaman/configs"
+    // "backend-mediaman/models"
+    "backend-mediaman/responses"
+    "backend-mediaman/middleware"
     "fmt"
     "strconv"
 	"net/http"

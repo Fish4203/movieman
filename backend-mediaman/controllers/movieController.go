@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"encoding/json"
-	"gin-mongo-api/configs"
-	"gin-mongo-api/models"
+	"backend-mediaman/configs"
+	"backend-mediaman/models"
 	"io"
 	"net/http"
 

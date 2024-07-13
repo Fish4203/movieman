@@ -2,8 +2,8 @@ package controllers
 
 import (
     "fmt"
-    "gin-mongo-api/middleware"
-    "gin-mongo-api/responses"
+    "backend-mediaman/middleware"
+    "backend-mediaman/responses"
     "io"
     "net/http"
     "net/url"
