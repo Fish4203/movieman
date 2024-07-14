@@ -15,8 +15,8 @@ func MovieRoute(router *gin.Engine)  {
   router.  POST("/movie",         middleware.AuthMiddleware(),controllers.CreateMovie())
   router.  POST("/movie/bulk",    middleware.AuthMiddleware(),controllers.BulkMovie())
 
-  // router.  POST("/movie/review",  middleware.AuthMiddleware(),controllers.CreateMovieReview())
-  // router.   GET("/movie/review",                              controllers.GetMovieReview())
-  // router.   PUT("/movie/review",  middleware.AuthMiddleware(),controllers.EditMovieReview())
-  // router.DELETE("/movie/review",  middleware.AuthMiddleware(),controllers.DeleteMovieReview())
+  router.  POST("/movie/review",  middleware.AuthMiddleware(),controllers.CreateMovieReview())
+  router.   GET("/movie/review/:userId",                      controllers.GetMovieReview())
+  router.   PUT("/movie/review",  middleware.AuthMiddleware(),controllers.EditMovieReview())
+  router.DELETE("/movie/review",  middleware.AuthMiddleware(),controllers.DeleteMovieReview())
 }

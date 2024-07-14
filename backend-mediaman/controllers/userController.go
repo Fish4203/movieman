@@ -1,14 +1,15 @@
 package controllers
 
 import (
-	"fmt"
 	"backend-mediaman/configs"
 	"backend-mediaman/middleware"
 	"backend-mediaman/models"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm/clause"
 )
 
 func CreateUser() gin.HandlerFunc {
@@ -27,6 +28,7 @@ func CreateUser() gin.HandlerFunc {
       return
     }
     user.Password = string(password)
+    user.Role = "user"
 
     if result := configs.DB.Create(&user); result.Error != nil {
       c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": result.Error})
@@ -42,10 +44,15 @@ func CreateUser() gin.HandlerFunc {
 
 func GetAUser() gin.HandlerFunc {
   return func(c *gin.Context) {
-    userID := c.Param("userId")
     var user models.User
 
-    if result := configs.DB.First(&user, userID); result.Error != nil || result.RowsAffected != 1 {
+    userID, err := strconv.Atoi(c.Param("userId"))
+    if err != nil {
+      c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid userID"})
+      return
+    }
+
+    if result := configs.DB.Preload(clause.Associations).First(&user, userID); result.Error != nil || result.RowsAffected != 1 {
       c.JSON(http.StatusNotFound, map[string]interface{}{"error": result.Error})
        return
     }
@@ -57,10 +64,10 @@ func GetAUser() gin.HandlerFunc {
 
 func GetUser() gin.HandlerFunc {
   return func(c *gin.Context) {
-    userID := c.MustGet("userId").(string)
+    userID := c.MustGet("userId").(uint)
     var user models.User
 
-    if result := configs.DB.First(&user, userID); result.Error != nil || result.RowsAffected != 1 {
+    if result := configs.DB.Preload(clause.Associations).First(&user, userID); result.Error != nil || result.RowsAffected != 1 {
       c.JSON(http.StatusNotFound, map[string]interface{}{"error": result.Error})
        return
     }
@@ -82,8 +89,8 @@ func EditAUser() gin.HandlerFunc {
       return
     }
 
-    userID := c.MustGet("userId").(string)
-    if userID == "" {
+    userID := c.MustGet("userId").(uint)
+    if userID == 0 {
       c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt or no jwt sent"})
       return
     }
@@ -117,8 +124,8 @@ func EditAUser() gin.HandlerFunc {
 
 func DeleteAUser() gin.HandlerFunc {
   return func(c *gin.Context) {
-    userID := c.MustGet("userId").(string)
-    if userID == "" {
+    userID := c.MustGet("userId").(uint)
+    if userID == 0 {
       c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt or no jwt sent"})
       return
     }
@@ -171,7 +178,7 @@ func Login() gin.HandlerFunc {
       return
     }
 
-    token, err := middleware.GenerateToken(fmt.Sprint(dbUser.ID), dbUser.Role)
+    token, err := middleware.GenerateToken(dbUser.ID, dbUser.Role)
     if  err != nil {
       c.JSON(http.StatusInternalServerError, map[string]interface{}{"stage": "generate token", "error": err.Error()})
       return

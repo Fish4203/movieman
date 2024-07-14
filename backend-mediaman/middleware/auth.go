@@ -12,7 +12,7 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateToken(user_id string, user_role string) (string, error) {
+func GenerateToken(user_id uint, user_role string) (string, error) {
 
 	token_lifespan,err := strconv.Atoi(os.Getenv("TOKEN_HOUR_LIFESPAN"))
 
@@ -45,7 +45,7 @@ func ExtractToken(c *gin.Context) string {
 
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("userId", "")
+		c.Set("userId", 0)
     c.Set("userRole", "")
 
 		tokenString := ExtractToken(c)
@@ -60,10 +60,11 @@ func AuthMiddleware() gin.HandlerFunc {
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if ok && token.Valid {
 				userRole, _ := claims["role"].(string)
-        uid, exists := claims["user_id"].(string)
-				if exists {
+        uid, exists := claims["user_id"].(float64)
+				fmt.Println(claims)
+        if exists {
 					c.Set("userRole", userRole)
-          c.Set("userId", uid)
+          c.Set("userId", uint(uid))
 					c.Next()
 				} else {
 					c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find userid in jwt"})

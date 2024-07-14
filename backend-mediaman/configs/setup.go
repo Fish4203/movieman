@@ -2,7 +2,6 @@ package configs
 
 import (
 	"fmt"
-	"backend-mediaman/models"
 	"log"
 	"os"
 
@@ -27,8 +26,6 @@ func GetDB() (*gorm.DB) {
     log.Fatal("Error loading db")
   }
 
-  db.AutoMigrate(&models.User{}, &models.Movie{}, &models.MovieExternal{}, &models.MovieReview{})
-  
   return db
 }
 

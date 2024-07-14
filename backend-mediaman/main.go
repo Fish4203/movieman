@@ -1,11 +1,12 @@
 package main
 
 import (
-    "backend-mediaman/configs"
-    "backend-mediaman/routes"
+	"backend-mediaman/configs"
+	"backend-mediaman/models"
+	"backend-mediaman/routes"
 
-    "github.com/gin-contrib/cors"
-    "github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -13,6 +14,8 @@ func main() {
 
     configs.GetDB()
 
+    configs.DB.AutoMigrate(&models.User{}, &models.Movie{}, &models.MovieExternal{}, &models.MovieReview{})
+    
     corsConfig := cors.DefaultConfig()
     corsConfig.AllowOrigins = []string{"*"}
     corsConfig.AllowCredentials = true

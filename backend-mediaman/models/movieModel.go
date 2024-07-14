@@ -1,5 +1,7 @@
 package models
 
+import "github.com/gin-gonic/gin"
+
 type Movie struct {
   Media
 
@@ -17,3 +19,16 @@ type MovieExternal struct {
 type MovieReview struct {
   MediaReview
 }
+
+func (movie *Movie) Save(c *gin.Context) error {
+  return saveMedia(c, movie)
+}
+
+func (movie *Movie) Get(c *gin.Context) error {
+  return getMedia(c, movie)
+}
+
+func (movie *Movie) Delete(c *gin.Context) error {
+  return deleteMedia(c, movie)
+}
+
