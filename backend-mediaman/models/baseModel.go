@@ -46,8 +46,8 @@ type MediaReview struct {
   Date        string          `             gorm:"primaryKey"`
   UserID      uint            `json:"user"  gorm:"primaryKey"`
 
-  Progress    uint            `json:"progress"`
   Rating      uint            `json:"rating"`
+  Progress    uint            `json:"progress"`
   Notes       string          `json:"notes"`
 }
 
