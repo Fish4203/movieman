@@ -3,7 +3,6 @@ package models
 import (
 	"backend-mediaman/configs"
 	"errors"
-	"reflect"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -76,16 +75,21 @@ func (media *Media) SetTitle(value string) {
   (*media).Title = value
 }
 
+func (review MediaReview) GetUserId() uint {
+  return review.UserID
+}
+
+func (review *MediaReview) SetUserId(value uint) {
+  (*review).UserID = value
+}
+
 func saveMedia(c *gin.Context, media MediaInterface) error {
   if err := c.BindJSON(media); err != nil {
     return err
   }
 
-  if result := configs.DB.Save(media); result.Error != nil {
-    return result.Error
-  }
-
-  return nil
+  result := configs.DB.Save(media)
+  return result.Error
 }
 
 func getMedia(c *gin.Context, media MediaInterface) error {
@@ -93,11 +97,8 @@ func getMedia(c *gin.Context, media MediaInterface) error {
     return err
   }
 
-  if result := configs.DB.Preload(clause.Associations).First(media, media); result.Error != nil {
-    return result.Error
-  }
-
-  return nil
+  result := configs.DB.Preload(clause.Associations).First(media, media)
+  return result.Error
 }
 
 func deleteMedia(c *gin.Context, media MediaInterface) error {
@@ -105,26 +106,20 @@ func deleteMedia(c *gin.Context, media MediaInterface) error {
     return err
   }
 
-  if result := configs.DB.Delete(media); result.Error != nil {
-    return result.Error
-  }
-
-  return nil
+  result := configs.DB.Delete(media)
+  return result.Error
 }
 
-func searchMedia(c *gin.Context, media MediaInterface) (interface{}, error) {
-  mediaArr := reflect.MakeSlice(reflect.TypeOf(media).Elem(), 0, 0)
-
+func SearchMedia[T MediaInterface](c *gin.Context, media T, mediaArr *[]T) error {
   if err := c.BindJSON(media); err != nil {
-    return mediaArr, err
+    return err
   }
 
   title := media.GetTitle()
   media.SetTitle("")
-    
+  
   result := configs.DB.Preload(clause.Associations).Where("title LIKE ?", "%" + title + "%").Find(mediaArr)
-
-  return mediaArr, result.Error
+  return result.Error
 }
 
 func saveReview(c *gin.Context, review ReviewInterface) error {
@@ -137,11 +132,8 @@ func saveReview(c *gin.Context, review ReviewInterface) error {
     return errors.New("Can't edit another users review")
   }
 
-  if result := configs.DB.Save(review); result.Error != nil {
-    return result.Error
-  }
-
-  return nil
+  result := configs.DB.Save(review)
+  return result.Error
 }
 
 func getReview(c *gin.Context, review ReviewInterface) error {
@@ -149,11 +141,8 @@ func getReview(c *gin.Context, review ReviewInterface) error {
     return err
   }
 
-  if result := configs.DB.Preload(clause.Associations).First(review, review); result.Error != nil {
-    return result.Error
-  }
-
-  return nil
+  result := configs.DB.Preload(clause.Associations).First(review, review)
+  return result.Error
 }
 
 func deleteReview(c *gin.Context, review ReviewInterface) error {
@@ -166,10 +155,7 @@ func deleteReview(c *gin.Context, review ReviewInterface) error {
     return errors.New("Can't delete another users review")
   }
 
-  if result := configs.DB.Delete(review); result.Error != nil {
-    return result.Error
-  }
-
-  return nil
+  result := configs.DB.Delete(review)
+  return result.Error
 }
 

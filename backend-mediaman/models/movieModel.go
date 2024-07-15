@@ -32,3 +32,14 @@ func (movie *Movie) Delete(c *gin.Context) error {
   return deleteMedia(c, movie)
 }
 
+func (movie *MovieReview) Save(c *gin.Context) error {
+  return saveReview(c, movie)
+}
+
+func (movie *MovieReview) Get(c *gin.Context) error {
+  return getReview(c, movie)
+}
+
+func (movie *MovieReview) Delete(c *gin.Context) error {
+  return deleteReview(c, movie)
+}
