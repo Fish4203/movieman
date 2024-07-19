@@ -11,7 +11,8 @@ type Show struct {
   ExternalInfo  []ShowExternal   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"` 
   Review        []ShowReview     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"` 
   
-  Seasons       []ShowSeason      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Number,Date;References:Number,Date"`
+  Seasons       []ShowSeason     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"`
+  Episodes      []ShowEpisode    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"`
 }
 
 type ShowExternal struct {

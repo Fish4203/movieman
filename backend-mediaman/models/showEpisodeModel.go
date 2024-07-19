@@ -1,97 +1,53 @@
 package models
 
-import (
-	"fmt"
-	"time"
-
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-)
+import "github.com/gin-gonic/gin"
 
 type ShowEpisode struct {
-  Title       string          `json:"title" `
-  
-  Number      uint            `json:"number"  gorm:"not null;primaryKey"` 
-  Date        string          `json:"date"    gorm:"not null;primaryKey"`
-  CreatedAt   time.Time
-  UpdatedAt   time.Time
-  DeletedAt   gorm.DeletedAt  `             gorm:"index"`
+  Media
+
+  EpisodeDate   string            `json:"episodeDate"    gorm:"not null"`
+  EpisodeNumber uint              `json:"episodeNumber"  gorm:"not null;primaryKey"`
+  EpisodeTitle  string            `json:"episodeTitle"`
+
+  SeasonDate    string            `json:"seasonDate"    gorm:"not null"`
+  SeasonNumber  uint              `json:"seasonNumber"  gorm:"not null;primaryKey"`
+  SeasonTitle   string            `json:"seasonTitle"`
 
   Budget        uint              `json:"budget"`
   Rating        string            `json:"rating"`
   
-  ExternalInfo  []ShowSeasonExternal   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Number,Date;References:Number,Date"` 
-  Review        []ShowSeasonReview     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Number,Date;References:Number,Date"` 
+  ExternalInfo  []ShowEpisodeExternal   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"` 
+  Review        []ShowEpisodeReview     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"` 
 }
 
 type ShowEpisodeExternal struct {
-  CreatedAt   time.Time
-  UpdatedAt   time.Time
-  DeletedAt   gorm.DeletedAt  `             gorm:"index"`
-
-  Number      uint        
-  Date        string      
-
-  ExternalID        string    `json:"externalId"      gorm:"primaryKey"`
-  DataProviderID    uint      `json:"dataProvider"    gorm:"primaryKey"`
-  
-  WatchPlatforms    []string  `json:"watchPlatforms"  gorm:"serializer:json"`
-  Genre             []string  `json:"genre"           gorm:"serializer:json"`
-  Links             []string  `json:"links"           gorm:"serializer:json"`
-  Description       string    `json:"description"`
-  ReviewScore       string    `json:"reviewScore"` 
+  MediaExternal
 }
 
 type ShowEpisodeReview struct {
-  CreatedAt   time.Time
-  UpdatedAt   time.Time
-  DeletedAt   gorm.DeletedAt  `             gorm:"index"`
-
-  Number      uint            `             gorm:"primaryKey"`
-  Date        string          `             gorm:"primaryKey"`
-  UserID      uint            `json:"user"  gorm:"primaryKey"`
-
-  Progress    uint            `json:"progress"`
-  Rating      uint            `json:"rating"`
-  Notes       string          `json:"notes"`
+  MediaReview
 }
 
-func (episode ShowEpisode) GetTitle() string {
-  return fmt.Sprint(episode.Number)
+func (episode *ShowEpisode) Save(c *gin.Context) error {
+  return saveMedia(c, episode)
 }
 
-func (media *ShowEpisode) SetTitle(value string) {
-  (*media).Title = value
+func (episode *ShowEpisode) Get(c *gin.Context) error {
+  return getMedia(c, episode)
 }
 
-func (review ShowEpisodeReview) GetUserId() uint {
-  return review.UserID
+func (episode *ShowEpisode) Delete(c *gin.Context) error {
+  return deleteMedia(c, episode)
 }
 
-func (review *ShowEpisodeReview) SetUserId(value uint) {
-  (*review).UserID = value
+func (episode *ShowEpisodeReview) Save(c *gin.Context) error {
+  return saveReview(c, episode)
 }
 
-func (showEpisode *ShowEpisode) Save(c *gin.Context) error {
-  return saveMedia(c, showEpisode)
+func (episode *ShowEpisodeReview) Get(c *gin.Context) error {
+  return getReview(c, episode)
 }
 
-func (showEpisode *ShowEpisode) Get(c *gin.Context) error {
-  return getMedia(c, showEpisode)
-}
-
-func (showEpisode *ShowEpisode) Delete(c *gin.Context) error {
-  return deleteMedia(c, showEpisode)
-}
-
-func (showEpisode *ShowEpisodeReview) Save(c *gin.Context) error {
-  return saveReview(c, showEpisode)
-}
-
-func (showEpisode *ShowEpisodeReview) Get(c *gin.Context) error {
-  return getReview(c, showEpisode)
-}
-
-func (showEpisode *ShowEpisodeReview) Delete(c *gin.Context) error {
-  return deleteReview(c, showEpisode)
+func (episode *ShowEpisodeReview) Delete(c *gin.Context) error {
+  return deleteReview(c, episode)
 }
