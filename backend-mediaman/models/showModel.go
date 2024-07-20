@@ -27,7 +27,15 @@ type ShowUnion struct {
   Show
   ShowExternal
 
-  Seasons       []ShowSeason  `json:"seasons"` 
+  BulkSeasons       []ShowSeasonUnion  `json:"seasons"` 
+}
+
+func (show ShowUnion) GetExternal() ShowExternal {
+  external := show.ShowExternal
+  external.Title = show.Show.Title
+  external.Date  = show.Show.Date
+
+  return external
 }
 
 func (show *Show) Save(c *gin.Context) error {

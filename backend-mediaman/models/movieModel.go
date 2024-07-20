@@ -25,6 +25,14 @@ type MovieUnion struct {
   MovieExternal
 }
 
+func (movie MovieUnion) GetExternal() MovieExternal {
+  external := movie.MovieExternal
+  external.Title = movie.Movie.Title
+  external.Date  = movie.Movie.Date
+
+  return external
+}
+
 func (movie *Movie) Save(c *gin.Context) error {
   return saveMedia(c, movie)
 }

@@ -36,6 +36,14 @@ type GameUnion struct {
   GameExternal
 }
 
+func (game GameUnion) GetExternal() GameExternal {
+  external := game.GameExternal
+  external.Title = game.Game.Title
+  external.Date  = game.Game.Date
+
+  return external
+}
+
 func (game *Game) Save(c *gin.Context) error {
   return saveMedia(c, game)
 }

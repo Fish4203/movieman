@@ -32,7 +32,16 @@ type ShowSeasonUnion struct {
   ShowSeason
   ShowSeasonExternal
   
-  Episodes            []ShowEpisode   `json:"episodes"`
+  BulkEpisodes            []ShowEpisodeUnion   `json:"episodes"`
+}
+
+func (season ShowSeasonUnion) GetExternal() ShowSeasonExternal {
+  external := season.ShowSeasonExternal
+  external.Title = season.ShowSeason.Title
+  external.Date  = season.ShowSeason.Date
+  external.SeasonNumber = season.ShowSeason.SeasonNumber
+
+  return external
 }
 
 func (media ShowSeason) GetTitle() string {

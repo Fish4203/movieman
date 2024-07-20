@@ -24,6 +24,14 @@ type BookUnion struct {
   BookExternal
 }
 
+func (book BookUnion) GetExternal() BookExternal {
+  external := book.BookExternal
+  external.Title = book.Book.Title
+  external.Date  = book.Book.Date
+
+  return external
+}
+
 func (book *Book) Save(c *gin.Context) error {
   return saveMedia(c, book)
 }

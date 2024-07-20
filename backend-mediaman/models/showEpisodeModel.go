@@ -36,7 +36,17 @@ type ShowEpisodeReview struct {
 
 type ShowEpisodeUnion struct {
   ShowEpisode
-  ShowSeasonExternal
+  ShowEpisodeExternal
+}
+
+func (episode ShowEpisodeUnion) GetExternal() ShowEpisodeExternal {
+  external := episode.ShowEpisodeExternal
+  external.Title = episode.ShowEpisode.Title
+  external.Date  = episode.ShowEpisode.Date
+  external.SeasonNumber = episode.ShowEpisode.SeasonNumber
+  external.EpisodeNumber = episode.ShowEpisode.EpisodeNumber
+
+  return external
 }
 
 func (media ShowEpisode) GetTitle() string {
