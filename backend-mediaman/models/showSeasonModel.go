@@ -6,23 +6,25 @@ type ShowSeason struct {
   Media
 
   SeasonDate    string            `json:"seasonDate"    gorm:"not null"`
-  SeasonNumber  uint              `json:"seasonNumber"  gorm:"not null;primaryKey"`
   SeasonTitle   string            `json:"seasonTitle"`
+  SeasonNumber  uint              `json:"seasonNumber"  gorm:"primaryKey"`
 
   Budget        uint              `json:"budget"`
   Rating        string            `json:"rating"`
   
-  ExternalInfo  []ShowSeasonExternal   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"` 
-  Review        []ShowSeasonReview     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"` 
-  
-  Episodes      []ShowEpisode          `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date,SeasonNumber;References:Title,Date,SeasonNumber"`
+  ExternalInfo  []ShowSeasonExternal   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date,SeasonNumber;References:Title,Date,SeasonNumber"` 
+  Review        []ShowSeasonReview     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date,SeasonNumber;References:Title,Date,SeasonNumber"` 
+ 
+  Episodes      []ShowEpisode          `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date,SeasonNumber;References:Title,Date,SeasonNumber"` 
 }
 
 type ShowSeasonExternal struct {
+  SeasonNumber  uint              `json:"seasonNumber"  gorm:"primaryKey"`
   MediaExternal
 }
 
 type ShowSeasonReview struct {
+  SeasonNumber  uint              `json:"seasonNumber"  gorm:"primaryKey"`
   MediaReview
 }
 

@@ -16,15 +16,21 @@ type ShowEpisode struct {
   Budget        uint              `json:"budget"`
   Rating        string            `json:"rating"`
   
-  ExternalInfo  []ShowEpisodeExternal   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"` 
-  Review        []ShowEpisodeReview     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date;References:Title,Date"` 
+  ExternalInfo  []ShowEpisodeExternal   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date,SeasonNumber,EpisodeNumber;References:Title,Date,SeasonNumber,EpisodeNumber"` 
+  Review        []ShowEpisodeReview     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:Title,Date,SeasonNumber,EpisodeNumber;References:Title,Date,SeasonNumber,EpisodeNumber"` 
 }
 
 type ShowEpisodeExternal struct {
+  SeasonNumber  uint              `json:"seasonNumber"  gorm:"not null;primaryKey"`
+  EpisodeNumber uint              `json:"episodeNumber"  gorm:"not null;primaryKey"`
+  
   MediaExternal
 }
 
 type ShowEpisodeReview struct {
+  SeasonNumber  uint              `json:"seasonNumber"  gorm:"not null;primaryKey"`
+  EpisodeNumber uint              `json:"episodeNumber"  gorm:"not null;primaryKey"`
+  
   MediaReview
 }
 

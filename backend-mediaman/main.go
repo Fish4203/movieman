@@ -14,7 +14,27 @@ func main() {
 
     configs.GetDB()
 
-    configs.DB.AutoMigrate(&models.User{}, &models.Movie{}, &models.MovieExternal{}, &models.MovieReview{})
+    configs.DB.AutoMigrate(
+      &models.User{}, 
+      &models.Movie{}, 
+      &models.MovieExternal{}, 
+      &models.MovieReview{},
+      &models.Game{}, 
+      &models.GameExternal{}, 
+      &models.GameReview{},
+      &models.Book{}, 
+      &models.BookExternal{}, 
+      &models.BookReview{},
+      &models.Show{}, 
+      &models.ShowExternal{}, 
+      &models.ShowReview{},
+      &models.ShowSeason{}, 
+      &models.ShowSeasonExternal{}, 
+      &models.ShowSeasonReview{},
+      &models.ShowEpisode{}, 
+      &models.ShowEpisodeExternal{}, 
+      &models.ShowEpisodeReview{},
+    )
     
     corsConfig := cors.DefaultConfig()
     corsConfig.AllowOrigins = []string{"*"}

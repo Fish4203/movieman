@@ -12,8 +12,8 @@ import (
 
 
 type Media struct {
-  Title       string          `json:"title" gorm:"not null;primaryKey"`
-  Date        string          `json:"date"  gorm:"not null;primaryKey"`
+  Title       string          `json:"title" gorm:"primaryKey"`
+  Date        string          `json:"date"  gorm:"primaryKey"`
   CreatedAt   time.Time
   UpdatedAt   time.Time
   DeletedAt   gorm.DeletedAt  `             gorm:"index"`
