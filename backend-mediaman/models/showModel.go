@@ -23,6 +23,13 @@ type ShowReview struct {
   MediaReview
 }
 
+type ShowUnion struct {
+  Show
+  ShowExternal
+
+  Seasons       []ShowSeason  `json:"seasons"` 
+}
+
 func (show *Show) Save(c *gin.Context) error {
   return saveMedia(c, show)
 }

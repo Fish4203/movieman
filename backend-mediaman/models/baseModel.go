@@ -42,8 +42,8 @@ type MediaReview struct {
   UpdatedAt   time.Time
   DeletedAt   gorm.DeletedAt  `             gorm:"index"`
 
-  Title       string          `             gorm:"primaryKey"`
-  Date        string          `             gorm:"primaryKey"`
+  Title       string          `json:"title" gorm:"primaryKey"`
+  Date        string          `json:"date"  gorm:"primaryKey"`
   UserID      uint            `json:"user"  gorm:"primaryKey"`
 
   Rating      uint            `json:"rating"`
@@ -118,7 +118,7 @@ func SearchMedia[T MediaInterface](c *gin.Context, media T, mediaArr *[]T) error
   title := media.GetTitle()
   media.SetTitle("")
   
-  result := configs.DB.Preload(clause.Associations).Where("title LIKE ?", "%" + title + "%").Find(mediaArr)
+  result := configs.DB.Preload(clause.Associations).Where("title LIKE ?", "%" + title + "%").Where(&media).Find(mediaArr)
   return result.Error
 }
 

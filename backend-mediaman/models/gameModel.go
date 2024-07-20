@@ -31,6 +31,11 @@ type GameReview struct {
   PlayTime    uint            `json:"playTime"`
 }
 
+type GameUnion struct {
+  Game
+  GameExternal
+}
+
 func (game *Game) Save(c *gin.Context) error {
   return saveMedia(c, game)
 }

@@ -19,6 +19,11 @@ type BookReview struct {
   MediaReview
 }
 
+type BookUnion struct {
+  Book
+  BookExternal
+}
+
 func (book *Book) Save(c *gin.Context) error {
   return saveMedia(c, book)
 }

@@ -20,6 +20,11 @@ type MovieReview struct {
   MediaReview
 }
 
+type MovieUnion struct {
+  Movie
+  MovieExternal
+}
+
 func (movie *Movie) Save(c *gin.Context) error {
   return saveMedia(c, movie)
 }

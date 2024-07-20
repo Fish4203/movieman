@@ -46,13 +46,15 @@ func main() {
     router.Use(cors.New(corsConfig))
 
     routes.UserRoute(router)
-    routes.MovieRoute(router)
-    // routes.GetMediaRoute(router)
-    // routes.PostMediaRoute(router)
-    // routes.IndexerRoute(router)
-    // routes.QbtRoute(router)
-    // routes.WatchRoute(router)
-    // routes.SearchProviderRoute(router)
 
+    routes.MovieRoute(router)
+    routes.BookRoute(router)
+    routes.GameRoute(router)
+    routes.ShowRoute(router)
+    routes.ShowSeasonRoute(router)
+    routes.ShowEpisodeRoute(router)
+
+    routes.BulkRoute(router)
+    
     router.Run("localhost:4000")
 }

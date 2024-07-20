@@ -34,6 +34,19 @@ type ShowEpisodeReview struct {
   MediaReview
 }
 
+type ShowEpisodeUnion struct {
+  ShowEpisode
+  ShowSeasonExternal
+}
+
+func (media ShowEpisode) GetTitle() string {
+  return media.EpisodeTitle
+}
+
+func (media *ShowEpisode) SetTitle(value string) {
+  (*media).EpisodeTitle = value
+}
+
 func (episode *ShowEpisode) Save(c *gin.Context) error {
   return saveMedia(c, episode)
 }

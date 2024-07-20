@@ -28,6 +28,21 @@ type ShowSeasonReview struct {
   MediaReview
 }
 
+type ShowSeasonUnion struct {
+  ShowSeason
+  ShowSeasonExternal
+  
+  Episodes            []ShowEpisode   `json:"episodes"`
+}
+
+func (media ShowSeason) GetTitle() string {
+  return media.SeasonTitle
+}
+
+func (media *ShowSeason) SetTitle(value string) {
+  (*media).SeasonTitle = value
+}
+
 func (season *ShowSeason) Save(c *gin.Context) error {
   return saveMedia(c, season)
 }
