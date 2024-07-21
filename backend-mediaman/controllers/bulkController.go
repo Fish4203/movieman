@@ -117,69 +117,76 @@ func createBulkMediaTransaction(
   tx := configs.DB.Begin()
   tx.SavePoint("start")
 
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&movies); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
+  if len(movies) != 0 {
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&movies); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
+    
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&moviesExternal); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
   }
 
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&books); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
+  if len(books) != 0 {
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&books); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
+  
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&booksExternal); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
+  }
+  
+  if len(games) != 0 {
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&games); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
+
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&gamesExternal); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
   }
 
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&games); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
+  if len(shows) != 0 {
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&shows); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
+
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&showsExternal); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
   }
 
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&shows); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
+  if len(seasons) != 0 {
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&seasons); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
+
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&seasonsExternal); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
   }
 
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&seasons); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
-  }
+  if len(episodes) != 0 {
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&episodes); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
 
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&episodes); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
-  }
-
-  if result := tx.Commit(); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
-  }
-
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&moviesExternal); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
-  }
-
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&booksExternal); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
-  }
-
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&gamesExternal); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
-  }
-
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&showsExternal); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
-  }
-
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&seasonsExternal); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
-  }
-
-  if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&episodesExternal); result.Error != nil {
-    tx.RollbackTo("start")
-    return result.Error
+    if result := tx.Clauses(clause.OnConflict{ UpdateAll: true }).Create(&episodesExternal); result.Error != nil {
+      tx.RollbackTo("start")
+      return result.Error
+    }
   }
 
   if result := tx.Commit(); result.Error != nil {
