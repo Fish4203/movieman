@@ -8,3 +8,5 @@ movieman.sublime-project
 README.sublime-workspace
 */.direnv
 webui/bun.lockb
+frontend/dist
+frontend/target
