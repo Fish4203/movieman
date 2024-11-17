@@ -9,29 +9,33 @@ import (
 
 
 type Media struct {
-  ID          uint            `json:"id"                                          gorm:"primaryKey"`
-  Title       string          `json:"title"           binding:"required"          gorm:"not null"` 
-  Date        string          `json:"date"            binding:"required"          gorm:"not null"`
   CreatedAt   time.Time
   UpdatedAt   time.Time
-  DeletedAt   gorm.DeletedAt  `                                                   gorm:"index"`
+  DeletedAt   gorm.DeletedAt      `                                                   gorm:"index"`
+  
+  ID          uint                `json:"id"                                          gorm:"primaryKey"`
+  
+  Title       string              `json:"title"           binding:"required"          gorm:"not null"` 
+  Date        string              `json:"date"            binding:"required"          gorm:"not null"`
 }
 
 type MediaExternal struct {
   CreatedAt   time.Time
   UpdatedAt   time.Time
-  DeletedAt   gorm.DeletedAt  `                                                   gorm:"index"`
+  DeletedAt   gorm.DeletedAt      `                                                   gorm:"index"`
 
-  MediaID           uint      `json:"mediaID"                                     gorm:"index"`
+  MediaID           uint          `json:"mediaID"                                     gorm:"index"`
 
-  ExternalID        string    `json:"externalID"      binding:"required"          gorm:"primaryKey"`
-  DataProviderID    uint      `json:"dataProvider"    binding:"required"          gorm:"primaryKey"`
-  
-  WatchPlatforms    []string  `json:"watchPlatforms"                              gorm:"serializer:json"`
-  Genre             []string  `json:"genre"                                       gorm:"serializer:json"`
-  Links             []string  `json:"links"           binding:"dive,url"          gorm:"serializer:json"`
-  Description       string    `json:"description"     binding:"required"`
-  ReviewScore       uint      `json:"reviewScore"     binding:"required,lte=100"` 
+  ExternalID        string        `json:"externalID"      binding:"required"          gorm:"primaryKey"`
+  DataProviderID    uint          `json:"dataProvider"    binding:"required"          gorm:"primaryKey"`
+ 
+  DataProvider      DataProvider  `                                                   gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;ForeignKey:ID;References:DataProviderID"`
+
+  WatchPlatforms    []string      `json:"watchPlatforms"                              gorm:"serializer:json"`
+  Genre             []string      `json:"genre"                                       gorm:"serializer:json"`
+  Links             []string      `json:"links"           binding:"dive,url"          gorm:"serializer:json"`
+  Description       string        `json:"description"     binding:"required"`
+  ReviewScore       uint          `json:"reviewScore"     binding:"required,lte=100"` 
 }
 
 type MediaReview struct {

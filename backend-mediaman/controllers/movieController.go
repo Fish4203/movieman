@@ -135,16 +135,21 @@ func DeleteMovie() gin.HandlerFunc {
   }
 }
 
-func CreateMovieReview() gin.HandlerFunc {
+func CreateFullMovies() gin.HandlerFunc {
   return func(c *gin.Context) {
-    var movieUnion models.MovieUnion
+    var movieUnions []models.MovieUnion
 
-    if err := c.ShouldBind(movieUnion); err != nil {
+    if err := c.ShouldBind(movieUnions); err != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
       return
     }
 
-    
+    for i := 0; i < len(movieUnions); i++ {
+      var movie models.Movie                  = movieUnions[i].Movie
+      var external models.MovieExternal       = movieUnions[i].MovieExternal
+
+      configs.DB.Where(&models.Movie{Media: models.Media{Title: movie.Title, Date: movie.Date}}).Attrs(movie).FirstOrCreate(&movie) 
+    }
   }
 }
 
