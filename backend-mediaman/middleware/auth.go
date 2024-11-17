@@ -12,7 +12,7 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateToken(user_id uint, user_role string) (string, error) {
+func GenerateUserToken(userID uint, userRole string) (string, error) {
 
 	token_lifespan,err := strconv.Atoi(os.Getenv("TOKEN_HOUR_LIFESPAN"))
 
@@ -22,9 +22,20 @@ func GenerateToken(user_id uint, user_role string) (string, error) {
 
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
-	claims["user_id"] = user_id
-	claims["role"] = user_role
+	claims["type"] = "user"
+  claims["user_id"] = userID
+	claims["role"] = userRole
   claims["exp"] = time.Now().Add(time.Hour * time.Duration(token_lifespan)).Unix()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	return token.SignedString([]byte(os.Getenv("API_SECRET")))
+}
+
+func GenerateDataProviderToken(providerID uint) (string, error) {
+	claims := jwt.MapClaims{}
+	claims["authorized"] = true
+	claims["type"] = "dataProvider"
+  claims["provider_id"] = providerID
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return token.SignedString([]byte(os.Getenv("API_SECRET")))
@@ -42,11 +53,11 @@ func ExtractToken(c *gin.Context) string {
 	return ""
 }
 
-
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Set("userId", 0)
+		c.Set("userID", -1)
     c.Set("userRole", "")
+    c.Set("providerID", -1)
 
 		tokenString := ExtractToken(c)
 
@@ -56,18 +67,36 @@ func AuthMiddleware() gin.HandlerFunc {
 			}
 			return []byte(os.Getenv("API_SECRET")), nil
 		})
+
 		if err == nil {
 			claims, ok := token.Claims.(jwt.MapClaims)
 			if ok && token.Valid {
-				userRole, _ := claims["role"].(string)
-        uid, exists := claims["user_id"].(float64)
-				fmt.Println(claims)
-        if exists {
-					c.Set("userRole", userRole)
-          c.Set("userId", uint(uid))
-					c.Next()
-				} else {
-					c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find userid in jwt"})
+        tokenType, exists := claims["type"].(string)
+
+        if exists && tokenType == "user" {
+          userRole, roleExists := claims["role"].(string)
+          userID, userExists := claims["user_id"].(uint)
+          
+          if roleExists && userExists {
+					  c.Set("userRole", userRole)
+            c.Set("userID", uint(userID))
+					  c.Next()
+				  } else {
+					  c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find user in jwt"})
+					  return
+				  }
+        } else if exists && tokenType == "dataPrivider" {
+          providerID, providerExists := claims["provider_id"].(uint)
+          
+          if providerExists {
+					  c.Set("providerID", providerID)
+					  c.Next()
+				  } else {
+					  c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find data provider in jwt"})
+					  return
+				  }
+        } else {
+					c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find type in jwt"})
 					return
 				}
 			} else {
