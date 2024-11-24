@@ -50,9 +50,9 @@ func GetMovieReview() gin.HandlerFunc {
 
     userID, err := strconv.Atoi(c.Query("userID"))
     if err != nil {
-      result = configs.DB.Where(&models.MovieReview{MediaReview: models.MediaReview{MediaID: uint(movieID)}}).Find(&movieReviews)
+      result = configs.DB.Where(&models.MovieReview{MovieID: uint(movieID)}).Find(&movieReviews)
     } else {
-      result = configs.DB.Where(&models.MovieReview{MediaReview: models.MediaReview{MediaID: uint(movieID), UserID: uint(userID)}}).Find(&movieReviews)    
+      result = configs.DB.Where(&models.MovieReview{MovieID: uint(movieID), UserID: uint(userID)}).Find(&movieReviews)    
     }
 
     if result.Error != nil {
@@ -86,7 +86,7 @@ func DeleteMovieReview() gin.HandlerFunc {
       return 
     }
 
-    result := configs.DB.Where(&models.MovieReview{MediaReview: models.MediaReview{MediaID: uint(movieID), UserID: uint(userIDParam)}}).Delete(&models.MovieReview{})    
+    result := configs.DB.Where(&models.MovieReview{MovieID: uint(movieID), UserID: uint(userIDParam)}).Delete(&models.MovieReview{})    
 
     if result.Error != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": result.Error.Error()})
@@ -107,7 +107,7 @@ func GetMovie() gin.HandlerFunc {
       return
     }
 
-    result := configs.DB.Preload("ExternalInfo").Preload("Review").First(&movie, movieID)
+    result := configs.DB.Preload("Externals").Preload("Reviews").First(&movie, movieID)
     if result.Error != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": result.Error.Error()})
       return
@@ -135,23 +135,7 @@ func DeleteMovie() gin.HandlerFunc {
   }
 }
 
-func CreateFullMovies() gin.HandlerFunc {
-  return func(c *gin.Context) {
-    var movieUnions []models.MovieUnion
 
-    if err := c.ShouldBind(movieUnions); err != nil {
-      c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
-      return
-    }
-
-    for i := 0; i < len(movieUnions); i++ {
-      var movie models.Movie                  = movieUnions[i].Movie
-      var external models.MovieExternal       = movieUnions[i].MovieExternal
-
-      configs.DB.Where(&models.Movie{Media: models.Media{Title: movie.Title, Date: movie.Date}}).Attrs(movie).FirstOrCreate(&movie) 
-    }
-  }
-}
 
 
 

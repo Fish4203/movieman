@@ -19,21 +19,6 @@ func main() {
       &models.Movie{}, 
       &models.MovieExternal{}, 
       &models.MovieReview{},
-      &models.Game{}, 
-      &models.GameExternal{}, 
-      &models.GameReview{},
-      &models.Book{}, 
-      &models.BookExternal{}, 
-      &models.BookReview{},
-      &models.Show{}, 
-      &models.ShowExternal{}, 
-      &models.ShowReview{},
-      &models.ShowSeason{}, 
-      &models.ShowSeasonExternal{}, 
-      &models.ShowSeasonReview{},
-      &models.ShowEpisode{}, 
-      &models.ShowEpisodeExternal{}, 
-      &models.ShowEpisodeReview{},
     )
     
     corsConfig := cors.DefaultConfig()
