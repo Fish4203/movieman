@@ -1,0 +1,7 @@
+FROM golang:bookworm
+
+WORKDIR /workspace
+
+COPY backend-mediaman/go.mod backend-mediaman/go.sum ./
+
+RUN go mod download

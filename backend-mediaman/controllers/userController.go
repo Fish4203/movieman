@@ -178,7 +178,7 @@ func Login() gin.HandlerFunc {
       return
     }
 
-    token, err := middleware.GenerateToken(dbUser.ID, dbUser.Role)
+    token, err := middleware.GenerateUserToken(dbUser.ID, dbUser.Role)
     if  err != nil {
       c.JSON(http.StatusInternalServerError, map[string]interface{}{"stage": "generate token", "error": err.Error()})
       return

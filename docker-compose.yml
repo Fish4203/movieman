@@ -1,0 +1,31 @@
+services: 
+  postgres:
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - PGUSER=postgres
+      - LC_COLLATE=C
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    image: "postgres:latest"
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./tmp/db:/var/lib/postgresql/data
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    command: sh -c "go run main.go"
+    depends_on:
+      postgres:
+        condition: service_started
+    environment:
+      - DB_HOST=postgres
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend-mediaman/:/workspace/
+

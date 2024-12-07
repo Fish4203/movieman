@@ -8,12 +8,10 @@ import (
 )
 
 func MovieRoute(router *gin.Engine)  {
-  router.   GET("/movie",                                     controllers.GetMovies())
-  // router.   PUT("/movie/merge",   middleware.AuthMiddleware(),controllers.MergeMovies())
-  router.DELETE("/movie",         middleware.AuthMiddleware(),controllers.DeleteMovie())
-  router.  POST("/movie",         middleware.AuthMiddleware(),controllers.CreateMovie())
+  router.   GET("/movie/:movieID",                                            controllers.GetMovie())
+  router.DELETE("/movie/:movieID",                middleware.AuthMiddleware(),controllers.DeleteMovie())
 
-  router.  POST("/movie/review",  middleware.AuthMiddleware(),controllers.CreateMovieReview())
-  router.   GET("/movie/review/:userId",                      controllers.GetMovieReview())
-  router.DELETE("/movie/review",  middleware.AuthMiddleware(),controllers.DeleteMovieReview())
+  router.   GET("/movie/:movieID/review",                                     controllers.GetMovieReview())
+  router.  POST("/movie/review",                  middleware.AuthMiddleware(),controllers.SaveMovieReview())
+  router.DELETE("/movie/:movieID/review/:userID", middleware.AuthMiddleware(),controllers.DeleteMovieReview())
 }
