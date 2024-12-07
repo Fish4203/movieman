@@ -17,7 +17,7 @@ func GenerateUserToken(userID uint, userRole string) (string, error) {
 	token_lifespan,err := strconv.Atoi(os.Getenv("TOKEN_HOUR_LIFESPAN"))
 
 	if err != nil {
-		return "",err
+		token_lifespan = 4
 	}
 
 	claims := jwt.MapClaims{}
@@ -75,14 +75,14 @@ func AuthMiddleware() gin.HandlerFunc {
 
         if exists && tokenType == "user" {
           userRole, roleExists := claims["role"].(string)
-          userID, userExists := claims["user_id"].(uint)
-          
+          userID, userExists := claims["user_id"].(float64)
+         
           if roleExists && userExists {
 					  c.Set("userRole", userRole)
             c.Set("userID", uint(userID))
 					  c.Next()
-				  } else {
-					  c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find user in jwt"})
+          } else {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find user in jwt"})
 					  return
 				  }
         } else if exists && tokenType == "dataPrivider" {

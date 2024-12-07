@@ -10,3 +10,4 @@ README.sublime-workspace
 webui/bun.lockb
 frontend/dist
 frontend/target
+backend-mediaman/tmp

@@ -17,25 +17,25 @@ func CreateUser() gin.HandlerFunc {
     var user models.User
 
     //validate the request body
-    if err := c.BindJSON(&user); err != nil {
+    if err := c.ShouldBindJSON(&user); err != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
       return
     }
 
-    password, err := bcrypt.GenerateFromPassword([]byte(user.Password),bcrypt.DefaultCost)
+    password, err := bcrypt.GenerateFromPassword([]byte(*user.Password),bcrypt.DefaultCost)
     if err != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
       return
     }
-    user.Password = string(password)
+    *user.Password = string(password)
     user.Role = "user"
 
     if result := configs.DB.Create(&user); result.Error != nil {
-      c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": result.Error})
+      c.JSON(http.StatusBadRequest, map[string]interface{}{"error": result.Error})
       return
     }
         
-    user.Password = ""
+    user.Password = nil
     c.JSON(http.StatusCreated, map[string]interface{}{"user": user})
   }
 }
@@ -57,7 +57,7 @@ func GetAUser() gin.HandlerFunc {
        return
     }
         
-    user.Password = ""
+    user.Password = nil
     c.JSON(http.StatusOK, map[string]interface{}{"user": user})
   }
 }
@@ -72,7 +72,7 @@ func GetUser() gin.HandlerFunc {
        return
     }
         
-    user.Password = ""
+    user.Password = nil
     c.JSON(http.StatusOK, map[string]interface{}{"user": user})
   }
 }
@@ -89,7 +89,7 @@ func EditAUser() gin.HandlerFunc {
       return
     }
 
-    userID := c.MustGet("userId").(uint)
+    userID := c.MustGet("userID").(uint)
     if userID == 0 {
       c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt or no jwt sent"})
       return
@@ -99,14 +99,16 @@ func EditAUser() gin.HandlerFunc {
       c.JSON(http.StatusNotFound, map[string]interface{}{"error": result.Error})
       return
     }
-        
-    passwordHash, err := bcrypt.GenerateFromPassword([]byte(newUser.Password),bcrypt.DefaultCost)
-    if err != nil {
-      c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
-      return
+       
+    if newUser.Password != nil {
+      passwordHash, err := bcrypt.GenerateFromPassword([]byte(*newUser.Password),bcrypt.DefaultCost)
+      if err != nil {
+        c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
+        return
+      }
+      *oldUser.Password = string(passwordHash)
     }
 
-    oldUser.Password = string(passwordHash)
     oldUser.Name = newUser.Name
     oldUser.Email = newUser.Email
     oldUser.Role = newUser.Role
@@ -116,7 +118,7 @@ func EditAUser() gin.HandlerFunc {
       return
     }
 
-    oldUser.Password = ""
+    oldUser.Password = nil
     c.JSON(http.StatusOK, map[string]interface{}{"user": oldUser})
   }
 }
@@ -149,7 +151,7 @@ func GetAllUsers() gin.HandlerFunc {
     }
     
     for i := 0; i < len(users); i++ {
-      users[i].Password = ""
+      users[i].Password = nil
     }
 
     c.JSON(http.StatusOK, map[string]interface{}{"users": users})
@@ -173,8 +175,8 @@ func Login() gin.HandlerFunc {
       return
     }
 
-    if err := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password)); err != nil {
-      c.JSON(http.StatusInternalServerError, map[string]interface{}{"stage": "password compare", "error": err.Error()})
+    if err := bcrypt.CompareHashAndPassword([]byte(*dbUser.Password), []byte(*user.Password)); err != nil {
+      c.JSON(http.StatusBadRequest, map[string]interface{}{"stage": "password compare", "error": err.Error()})
       return
     }
 

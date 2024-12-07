@@ -33,13 +33,8 @@ func main() {
     routes.UserRoute(router)
 
     routes.MovieRoute(router)
-    routes.BookRoute(router)
-    routes.GameRoute(router)
-    routes.ShowRoute(router)
-    routes.ShowSeasonRoute(router)
-    routes.ShowEpisodeRoute(router)
 
     routes.BulkRoute(router)
     
-    router.Run("localhost:4000")
+    router.Run("0.0.0.0:4000")
 }

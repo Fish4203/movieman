@@ -15,15 +15,14 @@ services:
     volumes:
       - ./tmp/db:/var/lib/postgresql/data
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    command: sh -c "go run main.go"
+    image: cosmtrek/air
+    working_dir: /workspace 
     depends_on:
       postgres:
         condition: service_started
     environment:
       - DB_HOST=postgres
+      - GIN_MODE=debug
     ports:
       - "4000:4000"
     volumes:
