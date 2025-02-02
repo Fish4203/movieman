@@ -16,7 +16,6 @@ func CreateUser() gin.HandlerFunc {
   return func(c *gin.Context) {
     var user models.User
 
-    //validate the request body
     if err := c.ShouldBindJSON(&user); err != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
       return
@@ -46,7 +45,7 @@ func GetAUser() gin.HandlerFunc {
   return func(c *gin.Context) {
     var user models.User
 
-    userID, err := strconv.Atoi(c.Param("userId"))
+    userID, err := strconv.Atoi(c.Param("userID"))
     if err != nil {
       c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid userID"})
       return
@@ -64,7 +63,7 @@ func GetAUser() gin.HandlerFunc {
 
 func GetUser() gin.HandlerFunc {
   return func(c *gin.Context) {
-    userID := c.MustGet("userId").(uint)
+    userID := c.GetUint("userID")
     var user models.User
 
     if result := configs.DB.Preload(clause.Associations).First(&user, userID); result.Error != nil || result.RowsAffected != 1 {
@@ -83,17 +82,12 @@ func EditAUser() gin.HandlerFunc {
     var oldUser models.User
     var newUser models.User
         
-    //validate the request body
     if err := c.BindJSON(&newUser); err != nil {
       c.JSON(http.StatusBadRequest, map[string]interface{}{"error": err.Error()})
       return
     }
 
-    userID := c.MustGet("userID").(uint)
-    if userID == 0 {
-      c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt or no jwt sent"})
-      return
-    }
+    userID := c.GetUint("userID")
 
     if result := configs.DB.First(&oldUser, userID); result.Error != nil || result.RowsAffected != 1 {
       c.JSON(http.StatusNotFound, map[string]interface{}{"error": result.Error})
@@ -126,11 +120,7 @@ func EditAUser() gin.HandlerFunc {
 
 func DeleteAUser() gin.HandlerFunc {
   return func(c *gin.Context) {
-    userID := c.MustGet("userId").(uint)
-    if userID == 0 {
-      c.JSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt or no jwt sent"})
-      return
-    }
+    userID := c.GetUint("userID")
 
     if result := configs.DB.Delete(&models.User{}, userID); result.Error != nil {
       c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": result.Error})
@@ -158,8 +148,7 @@ func GetAllUsers() gin.HandlerFunc {
   }
 }
 
-
-func Login() gin.HandlerFunc {
+func LoginUser() gin.HandlerFunc {
   return func(c *gin.Context) {
     var user models.User
     var dbUser models.User

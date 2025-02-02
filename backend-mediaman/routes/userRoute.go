@@ -8,11 +8,11 @@ import (
 )
 
 func UserRoute(router *gin.Engine)  {
-    router.  POST("/user",                                      controllers.CreateUser())
-    router.   GET("/user",          middleware.AuthMiddleware(),controllers.GetUser())
-    router.   GET("/user/:userId",                              controllers.GetAUser())
-    router.   PUT("/user",          middleware.AuthMiddleware(),controllers.EditAUser())
-    router.DELETE("/user",          middleware.AuthMiddleware(),controllers.DeleteAUser())
-    router.   GET("/users",                                     controllers.GetAllUsers())
-    router.  POST("/login",                                     controllers.Login())
+    router.  POST("/user",                                controllers.CreateUser())
+    router.   GET("/user",          middleware.UserAuth(),controllers.GetUser())
+    router.   GET("/user/:userID",                        controllers.GetAUser())
+    router.   PUT("/user",          middleware.UserAuth(),controllers.EditAUser())
+    router.DELETE("/user",          middleware.UserAuth(),controllers.DeleteAUser())
+    router.   GET("/users",                               controllers.GetAllUsers())
+    router.  POST("/login",                               controllers.LoginUser())
 }

@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,7 +15,7 @@ import (
 
 func GenerateUserToken(userID uint, userRole string) (string, error) {
 
-	token_lifespan,err := strconv.Atoi(os.Getenv("TOKEN_HOUR_LIFESPAN"))
+	token_lifespan, err := strconv.Atoi(os.Getenv("TOKEN_HOUR_LIFESPAN"))
 
 	if err != nil {
 		token_lifespan = 4
@@ -22,9 +23,8 @@ func GenerateUserToken(userID uint, userRole string) (string, error) {
 
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
-	claims["type"] = "user"
   claims["user_id"] = userID
-	claims["role"] = userRole
+	claims["user_role"] = userRole
   claims["exp"] = time.Now().Add(time.Hour * time.Duration(token_lifespan)).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
@@ -34,78 +34,77 @@ func GenerateUserToken(userID uint, userRole string) (string, error) {
 func GenerateDataProviderToken(providerID uint) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
-	claims["type"] = "dataProvider"
   claims["provider_id"] = providerID
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	return token.SignedString([]byte(os.Getenv("API_SECRET")))
 }
 
-func ExtractToken(c *gin.Context) string {
-	token := c.Query("token")
-	if token != "" {
-		return token
-	}
+func UserAuth() gin.HandlerFunc {
+  return func(c *gin.Context) {
+    claims, err := tokenExtractinator(c)
+    if err != nil {
+      c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+      return
+    }
+    
+    userRole, roleExists := (*claims)["role"].(string)
+    userID, userExists := (*claims)["user_id"].(float64)
+    
+    if !roleExists || !userExists {
+      c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "can not get token claims", "userID": userExists, "userRole": roleExists})
+      return
+    }
+
+    c.Set("userRole", userRole)
+    c.Set("userID", uint(userID))
+		c.Next()
+  }
+}
+
+func DataProviderAuth() gin.HandlerFunc {
+  return func(c *gin.Context) {
+    claims, err := tokenExtractinator(c)
+    if err != nil {
+      c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": err.Error()})
+      return
+    }
+    
+    providerID, providerExists := (*claims)["provider_id"].(float64)
+    
+    if !providerExists {
+      c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "can not get token claims", "providerID": providerExists})
+      return
+    }
+
+    c.Set("providerID", uint(providerID))
+		c.Next()
+  }
+}
+
+func tokenExtractinator(c *gin.Context) (*jwt.MapClaims, error) {
 	bearerToken := c.Request.Header.Get("Authorization")
-	if len(strings.Split(bearerToken, " ")) == 2 {
-		return strings.Split(bearerToken, " ")[1]
+	if len(strings.Split(bearerToken, " ")) != 2 {
+		return nil, errors.New("can not find auth token")
 	}
-	return ""
-}
-
-func AuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Set("userID", -1)
-    c.Set("userRole", "")
-    c.Set("providerID", -1)
-
-		tokenString := ExtractToken(c)
-
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(os.Getenv("API_SECRET")), nil
-		})
-
-		if err == nil {
-			claims, ok := token.Claims.(jwt.MapClaims)
-			if ok && token.Valid {
-        tokenType, exists := claims["type"].(string)
-
-        if exists && tokenType == "user" {
-          userRole, roleExists := claims["role"].(string)
-          userID, userExists := claims["user_id"].(float64)
-         
-          if roleExists && userExists {
-					  c.Set("userRole", userRole)
-            c.Set("userID", uint(userID))
-					  c.Next()
-          } else {
-            c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find user in jwt"})
-					  return
-				  }
-        } else if exists && tokenType == "dataPrivider" {
-          providerID, providerExists := claims["provider_id"].(uint)
-          
-          if providerExists {
-					  c.Set("providerID", providerID)
-					  c.Next()
-				  } else {
-					  c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find data provider in jwt"})
-					  return
-				  }
-        } else {
-					c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt could not find type in jwt"})
-					return
-				}
-			} else {
-				c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt"})
-				return
-			}
-		} else {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, map[string]interface{}{"error": "Invalid jwt or no jwt sent"})
-			return
+	
+  tokenString := strings.Split(bearerToken, " ")[1]
+  token, parseError := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	  if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-	}
+		return []byte(os.Getenv("API_SECRET")), nil
+	})
+
+  if parseError != nil {
+    return nil, parseError
+  }
+
+  claims, ok := token.Claims.(jwt.MapClaims)
+  if ok && token.Valid {
+    return &claims, nil
+  }
+
+  return nil, errors.New("Unable to parse jwt token") 
 }
+

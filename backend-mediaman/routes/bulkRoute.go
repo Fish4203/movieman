@@ -8,5 +8,5 @@ import (
 )
 
 func BulkRoute(router *gin.Engine)  {
-  router.POST("/bulk",  middleware.AuthMiddleware(),controllers.CreateBulk())
+  router.POST("/bulk",  middleware.DataProviderAuth(),controllers.CreateBulk())
 }

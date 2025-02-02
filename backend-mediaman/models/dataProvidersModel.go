@@ -13,9 +13,9 @@ type DataProvider struct {
   
   ID            uint              `json:"id"                                          gorm:"primaryKey"`
   
-  Name          string            `json:"name"          binding:"required"            gorm:"index"`
-  Description   string            `json:"description"   binding:"required"`
-  BaseUrl       string            `json:"base_url"      binding:"required,url"`
+  Name          string            `json:"name"                binding:"required"      gorm:"unique;index"`
+  Description   string            `json:"description"         binding:"required"`
+  BaseUrl       string            `json:"base_url,omitempty"  binding:"required,url"`
 
   HasMovies     bool              `json:"hasMovies"     binding:"required"`
   Movies        []MovieExternal   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;ForeignKey:DataProviderID;References:ID"` 
